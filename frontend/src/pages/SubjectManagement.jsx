@@ -159,7 +159,12 @@ function SubjectManagement() {
                     setUploadSubmitting(false);
                     return;
                 }
-                data.append('youtubeUrl', uploadForm.youtubeUrl);
+                // Ensure the URL always has https:// so browser doesn't treat it as a local path
+                let ytUrl = uploadForm.youtubeUrl.trim();
+                if (ytUrl && !/^https?:\/\//i.test(ytUrl)) {
+                    ytUrl = 'https://' + ytUrl;
+                }
+                data.append('youtubeUrl', ytUrl);
             } else {
                 if (uploadForm.file) {
                     data.append('file', uploadForm.file);
@@ -496,7 +501,7 @@ function SubjectManagement() {
                                             <label className="sm-form-label">
                                                 File {editingMaterial ? '(leave empty to keep current)' : '*'}
                                             </label>
-                                            <div className="sm-file-drop">
+                                            <div className="sm-file-drop" style={{ position: 'relative' }}>
                                                 <div className="sm-file-drop-icon"><FaCloudUploadAlt /></div>
                                                 <div className="sm-file-drop-text">
                                                     Click to browse or drag & drop
