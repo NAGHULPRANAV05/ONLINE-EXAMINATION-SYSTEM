@@ -4,10 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance
 const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json'
-    }
+    baseURL: API_URL
 });
 
 // Add token to requests
@@ -92,12 +89,8 @@ export const resultAPI = {
 export const materialAPI = {
     getAll: (params) => api.get('/materials', { params }),
     getById: (id) => api.get(`/materials/${id}`),
-    upload: (formData) => api.post('/materials', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    }),
-    update: (id, formData) => api.put(`/materials/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    }),
+    upload: (formData) => api.post('/materials', formData),
+    update: (id, formData) => api.put(`/materials/${id}`, formData),
     delete: (id) => api.delete(`/materials/${id}`),
     download: (id) => api.get(`/materials/${id}/download`, {
         responseType: 'blob'
