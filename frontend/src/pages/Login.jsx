@@ -2,135 +2,146 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import {
-    FaGraduationCap, FaEnvelope, FaLock, FaExclamationCircle,
-    FaClipboardCheck, FaShieldAlt, FaChartLine
+    FaGraduationCap, FaEnvelope, FaLock,
+    FaExclamationCircle, FaEye, FaEyeSlash, FaShieldAlt
 } from 'react-icons/fa';
 import './Login.css';
 
 function Login() {
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [focusedField, setFocusedField] = useState('');
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (error) setError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
-
         try {
             const response = await authAPI.login(formData);
             const { token, user } = response.data;
-
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
-
-            const redirectPath = user.role === 'admin' ? '/admin/dashboard' : '/student/dashboard';
-            navigate(redirectPath);
+            navigate(user.role === 'admin' ? '/admin/dashboard' : '/student/dashboard');
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed');
+            setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="login-page">
-            {/* Left — Branding */}
-            <div className="login-brand">
-                <div className="login-brand-content">
-                    <div className="login-brand-icon">
-                        <FaGraduationCap />
-                    </div>
-                    <h1>Exam Portal</h1>
-                    <p className="login-brand-sub">
-                        A powerful online examination platform for students and administrators
-                    </p>
-
-                    <div className="login-features">
-                        <div className="login-feature">
-                            <div className="login-feature-icon"><FaClipboardCheck /></div>
-                            <span className="login-feature-text">Create and manage exams with MCQ & coding questions</span>
-                        </div>
-                        <div className="login-feature">
-                            <div className="login-feature-icon"><FaShieldAlt /></div>
-                            <span className="login-feature-text">Secure proctoring with tab-switch detection</span>
-                        </div>
-                        <div className="login-feature">
-                            <div className="login-feature-icon"><FaChartLine /></div>
-                            <span className="login-feature-text">Real-time analytics and performance tracking</span>
-                        </div>
-                    </div>
-                </div>
+        <div className="lp-root">
+            {/* Background decoration */}
+            <div className="lp-bg">
+                <div className="lp-orb lp-orb-1" />
+                <div className="lp-orb lp-orb-2" />
+                <div className="lp-orb lp-orb-3" />
+                <div className="lp-grid" />
             </div>
 
-            {/* Right — Form */}
-            <div className="login-form-panel">
-                <div className="login-form-wrap">
-                    <div className="login-form-header">
-                        <h2>Welcome back</h2>
-                        <p>Sign in to your account to continue</p>
+            {/* Centered Card */}
+            <div className="lp-card">
+                {/* Top accent */}
+                <div className="lp-accent-bar" />
+
+                <div className="lp-body">
+                    {/* Logo + Brand */}
+                    <div className="lp-brand">
+                        <div className="lp-logo">
+                            <FaGraduationCap />
+                        </div>
+                        <h1 className="lp-title">Exam Portal</h1>
+                        <p className="lp-subtitle">Sign in to continue to your dashboard</p>
                     </div>
 
+                    {/* Error */}
                     {error && (
-                        <div className="login-error">
-                            <FaExclamationCircle /> {error}
+                        <div className="lp-error">
+                            <FaExclamationCircle />
+                            <span>{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="login-input-group">
-                            <label className="login-label">Email</label>
-                            <div className="login-input-wrap">
-                                <FaEnvelope className="login-input-icon" />
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="lp-form">
+                        <div className={`lp-field ${focusedField === 'email' ? 'focused' : ''}`}>
+                            <label htmlFor="lp-email">Email Address</label>
+                            <div className="lp-input-wrap">
+                                <FaEnvelope className="lp-icon" />
                                 <input
+                                    id="lp-email"
                                     type="email"
                                     name="email"
-                                    className="login-input"
-                                    placeholder="Enter your email"
+                                    placeholder="you@institution.edu"
                                     value={formData.email}
                                     onChange={handleChange}
+                                    onFocus={() => setFocusedField('email')}
+                                    onBlur={() => setFocusedField('')}
                                     required
+                                    autoComplete="email"
                                 />
                             </div>
                         </div>
 
-                        <div className="login-input-group">
-                            <label className="login-label">Password</label>
-                            <div className="login-input-wrap">
-                                <FaLock className="login-input-icon" />
+                        <div className={`lp-field ${focusedField === 'password' ? 'focused' : ''}`}>
+                            <label htmlFor="lp-password">Password</label>
+                            <div className="lp-input-wrap">
+                                <FaLock className="lp-icon" />
                                 <input
-                                    type="password"
+                                    id="lp-password"
+                                    type={showPassword ? 'text' : 'password'}
                                     name="password"
-                                    className="login-input"
                                     placeholder="Enter your password"
                                     value={formData.password}
                                     onChange={handleChange}
+                                    onFocus={() => setFocusedField('password')}
+                                    onBlur={() => setFocusedField('')}
                                     required
+                                    autoComplete="current-password"
                                 />
+                                <button
+                                    type="button"
+                                    className="lp-eye"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    tabIndex={-1}
+                                    aria-label="Toggle password"
+                                >
+                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                </button>
                             </div>
                         </div>
 
-                        <button type="submit" className="login-submit" disabled={loading}>
-                            {loading ? 'Signing in...' : 'Sign In'}
+                        <button
+                            id="login-submit-btn"
+                            type="submit"
+                            className="lp-submit"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <><span className="lp-spinner" /> Signing in…</>
+                            ) : (
+                                <>Sign In <span className="lp-arrow">→</span></>
+                            )}
                         </button>
                     </form>
 
-                    <div className="login-divider"><span>or</span></div>
-
-                    <p className="login-footer">
-                        Don't have an account? <Link to="/register">Create one</Link>
+                    {/* Footer */}
+                    <p className="lp-footer">
+                        Don't have an account?{' '}
+                        <Link to="/register" id="login-register-link">Create one</Link>
                     </p>
+
+                    <div className="lp-secure">
+                        <FaShieldAlt /> 256-bit SSL encrypted
+                    </div>
                 </div>
             </div>
         </div>
