@@ -211,229 +211,313 @@ function StudentMonitoring() {
     const activeCount = groupedStudents.length - blockedCount;
 
     return (
-        <div className="sm-neat-page">
+        <div className="sm-mon-page">
             <Navbar />
 
-            {/* Simple Clean Header */}
-            <div className="sm-neat-header">
-                <div className="sm-neat-container">
-                    <div className="sm-header-flex">
-                        <div>
-                            {selectedStudent ? (
-                                <div className="sm-breadcrumb-nav">
-                                    <button
-                                        type="button"
-                                        className="btn-back-link"
-                                        onClick={() => {
-                                            setSelectedStudentId(null);
-                                            setExamSearch('');
-                                            setStatusFilter('all');
-                                        }}
-                                    >
-                                        <FaArrowLeft /> All Students
-                                    </button>
-                                    <span className="sep">/</span>
-                                    <span className="current-student">{selectedStudent.name}</span>
-                                </div>
-                            ) : (
-                                <>
-                                    <h1 className="sm-page-title">Student Management & Results</h1>
-                                    <p className="sm-page-sub">Monitor student assessment results and manage portal login access</p>
-                                </>
-                            )}
-                        </div>
-
-                        {!selectedStudent && (
-                            <div className="sm-quick-stats">
-                                <span className="stat-tag total">{groupedStudents.length} Students</span>
-                                <span className="stat-tag active">{activeCount} Active</span>
-                                {blockedCount > 0 && (
-                                    <span className="stat-tag blocked">{blockedCount} Blocked</span>
-                                )}
-                            </div>
-                        )}
+            {/* Standard Hero Banner */}
+            <div className="sm-mon-hero">
+                <div className="sm-mon-hero-content">
+                    <div className="sm-mon-hero-icon">
+                        <FaUsers />
                     </div>
+                    <h1>Student Monitoring & Control</h1>
+                    <p className="sm-mon-hero-sub">
+                        {selectedStudent
+                            ? `Viewing complete exam records, performance metrics, and access privileges for ${selectedStudent.name}`
+                            : 'Track student performance, assessment results, and manage portal access privileges'}
+                    </p>
                 </div>
             </div>
 
+            {/* Top Analytics Stats Grid (Overlapping Hero) */}
+            {analytics && !selectedStudent && (
+                <div className="sm-mon-stats-wrap">
+                    <div className="sm-mon-stats-grid">
+                        <div className="sm-mon-stat purple">
+                            <div className="sm-mon-stat-top">
+                                <div className="sm-mon-stat-icon purple"><FaUsers /></div>
+                            </div>
+                            <div className="sm-mon-stat-value">{groupedStudents.length}</div>
+                            <p className="sm-mon-stat-label">Total Students</p>
+                        </div>
+
+                        <div className="sm-mon-stat blue">
+                            <div className="sm-mon-stat-top">
+                                <div className="sm-mon-stat-icon blue"><FaClipboardCheck /></div>
+                            </div>
+                            <div className="sm-mon-stat-value">{analytics.totalExamsTaken}</div>
+                            <p className="sm-mon-stat-label">Exams Taken</p>
+                        </div>
+
+                        <div className="sm-mon-stat green">
+                            <div className="sm-mon-stat-top">
+                                <div className="sm-mon-stat-icon green"><FaCheckCircle /></div>
+                            </div>
+                            <div className="sm-mon-stat-value">{analytics.passCount}</div>
+                            <p className="sm-mon-stat-label">Passed</p>
+                        </div>
+
+                        <div className="sm-mon-stat red">
+                            <div className="sm-mon-stat-top">
+                                <div className="sm-mon-stat-icon red"><FaTimesCircle /></div>
+                            </div>
+                            <div className="sm-mon-stat-value">{analytics.failCount}</div>
+                            <p className="sm-mon-stat-label">Failed</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Main Content Area */}
-            <div className="sm-neat-container sm-neat-body">
+            <div className="sm-mon-content">
 
                 {/* ════════════════════════════════════════════════════════════════════════
-                    VIEW 1: CLEAN STUDENTS DIRECTORY (Default)
+                    VIEW 1: STUDENTS DIRECTORY (Default)
                    ════════════════════════════════════════════════════════════════════════ */}
                 {!selectedStudent && (
-                    <div className="sm-card-box">
-                        {/* Filter and Search Bar */}
-                        <div className="sm-controls-row">
-                            <div className="sm-filter-pills">
-                                <button
-                                    type="button"
-                                    className={`pill-btn ${accountStatusFilter === 'all' ? 'active' : ''}`}
-                                    onClick={() => setAccountStatusFilter('all')}
-                                >
-                                    All ({groupedStudents.length})
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`pill-btn ${accountStatusFilter === 'active' ? 'active' : ''}`}
-                                    onClick={() => setAccountStatusFilter('active')}
-                                >
-                                    Active ({activeCount})
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`pill-btn ${accountStatusFilter === 'blocked' ? 'active' : ''}`}
-                                    onClick={() => setAccountStatusFilter('blocked')}
-                                >
-                                    Blocked ({blockedCount})
-                                </button>
+                    <>
+                        {/* Subject Performance Section */}
+                        {analytics?.subjectPerformance?.length > 0 && (
+                            <div className="sm-mon-section-wrap">
+                                <div className="sm-mon-section-head">
+                                    <div className="sm-mon-section-icon subjects"><FaBookOpen /></div>
+                                    <h2 className="sm-mon-section-title">Subject Performance</h2>
+                                </div>
+                                <div className="sm-mon-perf-grid">
+                                    {analytics.subjectPerformance.map((subject) => (
+                                        <div key={subject._id} className="sm-mon-perf-card">
+                                            <div className="sm-mon-perf-name">
+                                                <span className="sm-mon-perf-name-icon"><FaBookOpen /></span>
+                                                {subject.subjectName}
+                                            </div>
+                                            <div className="sm-mon-score-bar-wrap">
+                                                <div className="sm-mon-score-label">
+                                                    <span>Average Score</span>
+                                                    <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
+                                                        {subject.avgScore.toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                                <div className="sm-mon-score-track">
+                                                    <div
+                                                        className={`sm-mon-score-fill ${getScoreClass(subject.avgScore)}`}
+                                                        style={{ width: `${Math.min(subject.avgScore, 100)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="sm-mon-perf-meta">
+                                                <span>Attempts</span>
+                                                <span className="sm-mon-perf-attempts">
+                                                    <FaClipboardCheck /> {subject.totalAttempts}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Students Directory Header & Search */}
+                        <div className="sm-mon-section-head-split">
+                            <div className="sm-mon-section-head">
+                                <div className="sm-mon-section-icon results"><FaUserGraduate /></div>
+                                <div>
+                                    <h2 className="sm-mon-section-title">Student Records & Access Control</h2>
+                                    <p className="sm-mon-section-subtitle">Click student name to view results, or toggle portal access</p>
+                                </div>
                             </div>
 
-                            <div className="sm-search-input-wrap">
-                                <FaSearch className="search-icon" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by student name or email..."
-                                    value={studentSearch}
-                                    onChange={(e) => setStudentSearch(e.target.value)}
-                                />
-                                {studentSearch && (
+                            <div className="sm-mon-filter-controls">
+                                <div className="sm-status-pills">
                                     <button
                                         type="button"
-                                        className="btn-clear-x"
-                                        onClick={() => setStudentSearch('')}
+                                        className={`sm-pill-btn ${accountStatusFilter === 'all' ? 'active' : ''}`}
+                                        onClick={() => setAccountStatusFilter('all')}
                                     >
-                                        ×
+                                        All ({groupedStudents.length})
                                     </button>
-                                )}
+                                    <button
+                                        type="button"
+                                        className={`sm-pill-btn ${accountStatusFilter === 'active' ? 'active' : ''}`}
+                                        onClick={() => setAccountStatusFilter('active')}
+                                    >
+                                        Active ({activeCount})
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`sm-pill-btn ${accountStatusFilter === 'blocked' ? 'active' : ''}`}
+                                        onClick={() => setAccountStatusFilter('blocked')}
+                                    >
+                                        Blocked ({blockedCount})
+                                    </button>
+                                </div>
+
+                                <div className="sm-mon-search-box">
+                                    <FaSearch className="search-icon" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search student by name or email..."
+                                        value={studentSearch}
+                                        onChange={(e) => setStudentSearch(e.target.value)}
+                                    />
+                                    {studentSearch && (
+                                        <button
+                                            type="button"
+                                            className="btn-clear-search"
+                                            onClick={() => setStudentSearch('')}
+                                        >
+                                            ×
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
-                        {/* Clean Students Table */}
-                        <div className="sm-table-responsive">
-                            <table className="sm-clean-table">
+                        {/* Students Directory Table */}
+                        <div className="sm-mon-table-wrap">
+                            <table className="sm-mon-table">
                                 <thead>
                                     <tr>
                                         <th>Student</th>
-                                        <th>Status</th>
+                                        <th>Portal Access</th>
                                         <th>Exams Taken</th>
                                         <th>Pass / Fail</th>
                                         <th>Average Score</th>
                                         <th>Best Score</th>
-                                        <th>Latest Exam</th>
+                                        <th>Latest Attempt</th>
                                         <th style={{ textAlign: 'right' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredStudents.length === 0 ? (
                                         <tr>
-                                            <td colSpan="8" className="empty-table-cell">
-                                                No students found matching your criteria.
+                                            <td colSpan="8" className="sm-mon-empty-row">
+                                                {groupedStudents.length === 0
+                                                    ? "No registered students found."
+                                                    : "No students matching your search criteria."}
                                             </td>
                                         </tr>
                                     ) : (
                                         filteredStudents.map((student) => (
                                             <tr
                                                 key={student.id}
-                                                className={`student-row ${student.isBlocked ? 'blocked-row' : ''}`}
+                                                className={`sm-mon-clickable-row ${student.isBlocked ? 'is-blocked-row' : ''}`}
                                                 onClick={() => setSelectedStudentId(student.id)}
                                             >
-                                                {/* Student Name & Email */}
                                                 <td>
-                                                    <div className="student-profile-cell">
-                                                        <div className={`avatar-badge ${student.isBlocked ? 'blocked' : ''}`}>
+                                                    <div className="sm-student-profile-cell">
+                                                        <div className={`sm-avatar-circle ${student.isBlocked ? 'blocked' : ''}`}>
                                                             {getInitials(student.name)}
                                                         </div>
-                                                        <div className="student-names">
-                                                            <strong className="name-text">{student.name}</strong>
-                                                            <span className="email-text">{student.email}</span>
+                                                        <div className="sm-student-info">
+                                                            <span className="sm-student-name-text">
+                                                                {student.name}
+                                                            </span>
+                                                            <span className="sm-student-email-text">
+                                                                {student.email}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </td>
 
-                                                {/* Status Badge */}
                                                 <td>
-                                                    <span className={`status-badge ${student.isBlocked ? 'blocked' : 'active'}`}>
-                                                        {student.isBlocked ? <FaBan /> : <FaCheckCircle />}
-                                                        <span>{student.isBlocked ? 'Blocked' : 'Active'}</span>
-                                                    </span>
-                                                </td>
-
-                                                {/* Exams Count */}
-                                                <td>
-                                                    <span className="exam-count-chip">
-                                                        <FaClipboardCheck /> {student.examsCount} {student.examsCount === 1 ? 'Exam' : 'Exams'}
-                                                    </span>
-                                                </td>
-
-                                                {/* Pass / Fail */}
-                                                <td>
-                                                    <div className="pass-fail-flex">
-                                                        <span className="pf-pass">✓ {student.passedCount}</span>
-                                                        <span className="pf-sep">/</span>
-                                                        <span className="pf-fail">✗ {student.failedCount}</span>
-                                                    </div>
-                                                </td>
-
-                                                {/* Avg Score */}
-                                                <td>
-                                                    {student.examsCount > 0 ? (
-                                                        <span className={`score-badge ${getScoreClass(student.avgPercentage)}`}>
-                                                            {student.avgPercentage.toFixed(1)}%
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-muted">-</span>
-                                                    )}
-                                                </td>
-
-                                                {/* Best Score */}
-                                                <td>
-                                                    {student.examsCount > 0 ? (
-                                                        <span className="best-score-text">
-                                                            <FaTrophy className="trophy-icon" />
-                                                            {student.bestPercentage.toFixed(1)}%
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-muted">-</span>
-                                                    )}
-                                                </td>
-
-                                                {/* Latest Exam Date */}
-                                                <td>
-                                                    <span className="date-subtext">
-                                                        {student.latestAttemptDate ? (
-                                                            new Date(student.latestAttemptDate).toLocaleDateString(undefined, {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                year: 'numeric'
-                                                            })
+                                                    <span className={`sm-access-tag ${student.isBlocked ? 'blocked' : 'active'}`}>
+                                                        {student.isBlocked ? (
+                                                            <>
+                                                                <FaBan /> Blocked
+                                                            </>
                                                         ) : (
-                                                            'No attempts'
+                                                            <>
+                                                                <FaCheckCircle /> Active
+                                                            </>
                                                         )}
                                                     </span>
                                                 </td>
 
-                                                {/* Actions */}
+                                                <td>
+                                                    <span className="sm-exam-count-badge">
+                                                        <FaClipboardCheck style={{ marginRight: 4 }} />
+                                                        {student.examsCount} {student.examsCount === 1 ? 'Exam' : 'Exams'}
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    <div className="sm-pass-fail-ratio">
+                                                        <span className="ratio-pass">
+                                                            <FaCheckCircle /> {student.passedCount}
+                                                        </span>
+                                                        <span className="ratio-sep">•</span>
+                                                        <span className="ratio-fail">
+                                                            <FaTimesCircle /> {student.failedCount}
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div className="sm-avg-wrap">
+                                                        {student.examsCount > 0 ? (
+                                                            <span className={`sm-mon-pct ${getScoreClass(student.avgPercentage)}`}>
+                                                                {student.avgPercentage.toFixed(1)}%
+                                                            </span>
+                                                        ) : (
+                                                            <span className="sm-muted-text">-</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    {student.examsCount > 0 ? (
+                                                        <span className="sm-best-score">
+                                                            <FaTrophy style={{ color: '#f59e0b', marginRight: 4 }} />
+                                                            {student.bestPercentage.toFixed(1)}%
+                                                        </span>
+                                                    ) : (
+                                                        <span className="sm-muted-text">-</span>
+                                                    )}
+                                                </td>
+
+                                                <td>
+                                                    <span className="sm-date-text">
+                                                        {student.latestAttemptDate ? (
+                                                            <>
+                                                                <FaCalendarAlt style={{ marginRight: 4, color: '#94a3b8' }} />
+                                                                {new Date(student.latestAttemptDate).toLocaleDateString(undefined, {
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    year: 'numeric'
+                                                                })}
+                                                            </>
+                                                        ) : (
+                                                            <span className="sm-muted-text">No attempts</span>
+                                                        )}
+                                                    </span>
+                                                </td>
+
                                                 <td style={{ textAlign: 'right' }}>
-                                                    <div className="actions-flex" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="sm-action-btns" onClick={(e) => e.stopPropagation()}>
                                                         <button
                                                             type="button"
-                                                            className={`btn-access-toggle ${student.isBlocked ? 'unblock' : 'block'}`}
+                                                            className={`btn-block-toggle ${student.isBlocked ? 'unblock' : 'block'}`}
                                                             onClick={() => handleToggleBlock(student.id, student.isBlocked, student.name)}
-                                                            title={student.isBlocked ? "Allow student to log in" : "Block student from portal"}
+                                                            title={student.isBlocked ? "Allow student to log in" : "Block student from logging in"}
                                                         >
-                                                            {student.isBlocked ? <FaCheck /> : <FaBan />}
-                                                            <span>{student.isBlocked ? 'Unblock' : 'Block'}</span>
+                                                            {student.isBlocked ? (
+                                                                <>
+                                                                    <FaCheck /> Unblock
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <FaBan /> Block
+                                                                </>
+                                                            )}
                                                         </button>
 
                                                         <button
                                                             type="button"
-                                                            className="btn-open-results"
+                                                            className="btn-view-results"
                                                             onClick={() => setSelectedStudentId(student.id)}
                                                         >
                                                             <span>Results</span>
-                                                            <FaChevronRight className="arrow-icon" />
+                                                            <FaChevronRight className="btn-arrow" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -443,101 +527,140 @@ function StudentMonitoring() {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    </>
                 )}
 
                 {/* ════════════════════════════════════════════════════════════════════════
-                    VIEW 2: INDIVIDUAL STUDENT RESULTS (Clean & Simple)
+                    VIEW 2: INDIVIDUAL STUDENT RESULTS DETAIL
                    ════════════════════════════════════════════════════════════════════════ */}
                 {selectedStudent && (
-                    <div className="sm-detail-box">
-                        {/* Clean Student Header Card */}
-                        <div className={`sm-student-banner ${selectedStudent.isBlocked ? 'blocked-banner' : ''}`}>
-                            <div className="banner-student-left">
-                                <div className={`avatar-badge lg ${selectedStudent.isBlocked ? 'blocked' : ''}`}>
-                                    {getInitials(selectedStudent.name)}
-                                </div>
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <h2 className="banner-name">{selectedStudent.name}</h2>
-                                        <span className={`status-badge ${selectedStudent.isBlocked ? 'blocked' : 'active'}`}>
-                                            {selectedStudent.isBlocked ? <FaBan /> : <FaCheckCircle />}
-                                            <span>{selectedStudent.isBlocked ? 'Blocked' : 'Active'}</span>
-                                        </span>
-                                    </div>
-                                    <p className="banner-email">{selectedStudent.email}</p>
-                                </div>
-                            </div>
+                    <div className="sm-student-detail-view">
 
-                            <div className="banner-student-right">
-                                <div className="banner-stat-pills">
-                                    <div className="b-stat-pill">
-                                        <span className="num">{selectedStudent.examsCount}</span>
-                                        <span className="lbl">Exams Taken</span>
-                                    </div>
-                                    <div className="b-stat-pill pass">
-                                        <span className="num">{selectedStudent.passedCount}</span>
-                                        <span className="lbl">Passed</span>
-                                    </div>
-                                    <div className="b-stat-pill fail">
-                                        <span className="num">{selectedStudent.failedCount}</span>
-                                        <span className="lbl">Failed</span>
-                                    </div>
-                                    <div className="b-stat-pill avg">
-                                        <span className="num">{selectedStudent.avgPercentage.toFixed(1)}%</span>
-                                        <span className="lbl">Average</span>
-                                    </div>
-                                </div>
+                        {/* Top Back Navigation Bar */}
+                        <div className="sm-detail-nav-bar">
+                            <button
+                                type="button"
+                                className="btn-back-to-directory"
+                                onClick={() => {
+                                    setSelectedStudentId(null);
+                                    setExamSearch('');
+                                    setStatusFilter('all');
+                                }}
+                            >
+                                <FaArrowLeft />
+                                <span>Back to Students Directory</span>
+                            </button>
 
-                                <button
-                                    type="button"
-                                    className={`btn-access-toggle lg ${selectedStudent.isBlocked ? 'unblock' : 'block'}`}
-                                    onClick={() => handleToggleBlock(selectedStudent.id, selectedStudent.isBlocked, selectedStudent.name)}
-                                >
-                                    {selectedStudent.isBlocked ? <FaCheck /> : <FaBan />}
-                                    <span>{selectedStudent.isBlocked ? 'Unblock Student' : 'Block Student'}</span>
-                                </button>
+                            <div className="sm-detail-breadcrumb">
+                                <span>Students</span>
+                                <span className="sep">/</span>
+                                <span className="current">{selectedStudent.name}</span>
                             </div>
                         </div>
 
-                        {/* Exam Results Table Header and Filter */}
-                        <div className="sm-controls-row" style={{ marginTop: '1.25rem' }}>
-                            <div className="sm-filter-pills">
+                        {/* Student Profile Overview Card */}
+                        <div className={`sm-student-profile-card ${selectedStudent.isBlocked ? 'is-blocked-card' : ''}`}>
+                            <div className="profile-card-left">
+                                <div className={`profile-large-avatar ${selectedStudent.isBlocked ? 'blocked' : ''}`}>
+                                    {getInitials(selectedStudent.name)}
+                                </div>
+                                <div className="profile-info-block">
+                                    <div className="profile-name-row">
+                                        <h2 className="profile-name">{selectedStudent.name}</h2>
+                                        <span className={`sm-access-tag ${selectedStudent.isBlocked ? 'blocked' : 'active'}`}>
+                                            {selectedStudent.isBlocked ? (
+                                                <>
+                                                    <FaBan /> Blocked from Portal
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaCheckCircle /> Active Account
+                                                </>
+                                            )}
+                                        </span>
+                                    </div>
+                                    <p className="profile-email">{selectedStudent.email}</p>
+                                </div>
+                            </div>
+
+                            <div className="profile-card-right">
+                                <div className="profile-stats-cluster">
+                                    <div className="cluster-item">
+                                        <span className="cluster-val">{selectedStudent.examsCount}</span>
+                                        <span className="cluster-lbl">Exams Taken</span>
+                                    </div>
+                                    <div className="cluster-item">
+                                        <span className="cluster-val pass">{selectedStudent.passedCount}</span>
+                                        <span className="cluster-lbl">Passed</span>
+                                    </div>
+                                    <div className="cluster-item">
+                                        <span className="cluster-val fail">{selectedStudent.failedCount}</span>
+                                        <span className="cluster-lbl">Failed</span>
+                                    </div>
+                                    <div className="cluster-item highlight">
+                                        <span className="cluster-val">{selectedStudent.avgPercentage.toFixed(1)}%</span>
+                                        <span className="cluster-lbl">Avg Score</span>
+                                    </div>
+                                </div>
+
+                                <div className="profile-actions">
+                                    <button
+                                        type="button"
+                                        className={`btn-profile-block ${selectedStudent.isBlocked ? 'unblock' : 'block'}`}
+                                        onClick={() => handleToggleBlock(selectedStudent.id, selectedStudent.isBlocked, selectedStudent.name)}
+                                    >
+                                        {selectedStudent.isBlocked ? (
+                                            <>
+                                                <FaCheck /> Unblock Access
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FaBan /> Block Access
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Search and Filters for this student's exam results */}
+                        <div className="sm-detail-controls-row">
+                            <div className="sm-detail-tabs">
                                 <button
                                     type="button"
-                                    className={`pill-btn ${statusFilter === 'all' ? 'active' : ''}`}
+                                    className={`detail-tab ${statusFilter === 'all' ? 'active' : ''}`}
                                     onClick={() => setStatusFilter('all')}
                                 >
                                     All Exams ({selectedStudent.results.length})
                                 </button>
                                 <button
                                     type="button"
-                                    className={`pill-btn ${statusFilter === 'pass' ? 'active' : ''}`}
+                                    className={`detail-tab ${statusFilter === 'pass' ? 'active' : ''}`}
                                     onClick={() => setStatusFilter('pass')}
                                 >
                                     Passed ({selectedStudent.passedCount})
                                 </button>
                                 <button
                                     type="button"
-                                    className={`pill-btn ${statusFilter === 'fail' ? 'active' : ''}`}
+                                    className={`detail-tab ${statusFilter === 'fail' ? 'active' : ''}`}
                                     onClick={() => setStatusFilter('fail')}
                                 >
                                     Failed ({selectedStudent.failedCount})
                                 </button>
                             </div>
 
-                            <div className="sm-search-input-wrap sm">
+                            <div className="sm-detail-search">
                                 <FaSearch className="search-icon" />
                                 <input
                                     type="text"
-                                    placeholder="Search exam..."
+                                    placeholder="Search exam or subject..."
                                     value={examSearch}
                                     onChange={(e) => setExamSearch(e.target.value)}
                                 />
                                 {examSearch && (
                                     <button
                                         type="button"
-                                        className="btn-clear-x"
+                                        className="btn-clear-search"
                                         onClick={() => setExamSearch('')}
                                     >
                                         ×
@@ -546,28 +669,28 @@ function StudentMonitoring() {
                             </div>
                         </div>
 
-                        {/* Exam Results Table */}
-                        <div className="sm-table-responsive">
-                            <table className="sm-clean-table">
+                        {/* Detailed Exam Results Table */}
+                        <div className="sm-mon-table-wrap">
+                            <table className="sm-mon-table">
                                 <thead>
                                     <tr>
                                         <th>Exam Title</th>
                                         <th>Subject</th>
                                         <th>Score</th>
                                         <th>Percentage</th>
-                                        <th>Result</th>
+                                        <th>Status</th>
                                         <th>Time Taken</th>
-                                        <th>Submitted On</th>
+                                        <th>Date & Time</th>
                                         <th style={{ textAlign: 'right' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredStudentResults.length === 0 ? (
                                         <tr>
-                                            <td colSpan="8" className="empty-table-cell">
+                                            <td colSpan="8" className="sm-mon-empty-row">
                                                 {selectedStudent.results.length === 0
-                                                    ? `${selectedStudent.name} hasn't taken any exams yet.`
-                                                    : 'No exam attempts match your filter.'}
+                                                    ? `${selectedStudent.name} hasn't attempted any exams yet.`
+                                                    : 'No exam attempts matched your filter.'}
                                             </td>
                                         </tr>
                                     ) : (
@@ -576,40 +699,57 @@ function StudentMonitoring() {
                                             return (
                                                 <tr key={result._id}>
                                                     <td>
-                                                        <strong className="exam-title">{result.exam?.title || 'Examination'}</strong>
+                                                        <div className="sm-exam-title-cell">
+                                                            <FaListAlt className="exam-title-icon" />
+                                                            <span className="exam-title-text">
+                                                                {result.exam?.title || 'General Examination'}
+                                                            </span>
+                                                        </div>
                                                     </td>
 
                                                     <td>
-                                                        <span className="subject-tag">
-                                                            <FaBookOpen /> {result.subject?.name || 'General'}
+                                                        <span className="sm-subject-pill">
+                                                            <FaBookOpen style={{ marginRight: 4 }} />
+                                                            {result.subject?.name || 'General'}
                                                         </span>
                                                     </td>
 
                                                     <td>
-                                                        <span className="score-val">{result.totalScore}</span>
-                                                    </td>
-
-                                                    <td>
-                                                        <span className={`score-badge ${getScoreClass(result.percentage)}`}>
-                                                            {(result.percentage || 0).toFixed(1)}%
+                                                        <span className="sm-score-text">
+                                                            {result.totalScore}
                                                         </span>
                                                     </td>
 
                                                     <td>
-                                                        <span className={`status-badge ${isPass ? 'active' : 'blocked'}`}>
+                                                        <div className="sm-score-bar-inline">
+                                                            <div className="sm-score-track sm">
+                                                                <div
+                                                                    className={`sm-mon-score-fill ${getScoreClass(result.percentage)}`}
+                                                                    style={{ width: `${Math.min(result.percentage || 0, 100)}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className={`sm-mon-pct ${getScoreClass(result.percentage)}`}>
+                                                                {(result.percentage || 0).toFixed(1)}%
+                                                            </span>
+                                                        </div>
+                                                    </td>
+
+                                                    <td>
+                                                        <span className={`sm-status-chip ${isPass ? 'pass' : 'fail'}`}>
                                                             {isPass ? <FaCheckCircle /> : <FaTimesCircle />}
-                                                            <span>{isPass ? 'PASSED' : 'FAILED'}</span>
+                                                            {isPass ? 'PASSED' : 'FAILED'}
                                                         </span>
                                                     </td>
 
                                                     <td>
-                                                        <span className="date-subtext">
+                                                        <span className="sm-time-text">
                                                             {Math.floor((result.timeTaken || 0) / 60)}m {(result.timeTaken || 0) % 60}s
                                                         </span>
                                                     </td>
 
                                                     <td>
-                                                        <span className="date-subtext">
+                                                        <span className="sm-date-text">
+                                                            <FaCalendarAlt style={{ marginRight: 4, color: '#94a3b8' }} />
                                                             {new Date(result.submittedAt).toLocaleDateString(undefined, {
                                                                 month: 'short',
                                                                 day: 'numeric',
@@ -619,20 +759,21 @@ function StudentMonitoring() {
                                                     </td>
 
                                                     <td style={{ textAlign: 'right' }}>
-                                                        <div className="actions-flex">
+                                                        <div className="sm-row-actions">
                                                             <button
                                                                 type="button"
-                                                                className="btn-open-scorecard"
+                                                                className="btn-scorecard-link"
                                                                 onClick={() => navigate(`/student/result/${result._id}`)}
+                                                                title="View detailed scorecard & answers"
                                                             >
                                                                 <FaExternalLinkAlt /> Scorecard
                                                             </button>
 
                                                             <button
                                                                 type="button"
-                                                                className="btn-del-icon"
+                                                                className="btn-mon-delete"
                                                                 onClick={() => handleDelete(result._id)}
-                                                                title="Delete result"
+                                                                title="Delete this attempt"
                                                             >
                                                                 <FaTrash />
                                                             </button>
