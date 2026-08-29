@@ -7,44 +7,51 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import FaceMonitor from '../components/FaceMonitor';
 import { examAPI, resultAPI } from '../services/api';
 import {
-    FaExclamationTriangle,
     FaChevronLeft,
     FaChevronRight,
-    FaVideo,
-    FaClock,
-    FaQuestionCircle,
-    FaTrophy,
+    FaBookmark,
+    FaRegBookmark,
+    FaCheck,
     FaPlay,
-    FaCheckCircle,
-    FaPaperPlane,
     FaShieldAlt,
-    FaKeyboard,
-    FaBan,
-    FaSyncAlt,
-    FaFlask
+    FaExclamationTriangle,
+    FaCopy,
+    FaEraser,
+    FaCode,
+    FaListUl,
+    FaTh,
+    FaTimes,
+    FaCheckCircle,
+    FaQuestionCircle
 } from 'react-icons/fa';
 import './ExamInterface.css';
 
 function ExamInterface() {
     const { examId } = useParams();
     const navigate = useNavigate();
+
+    // Core state
     const [exam, setExam] = useState(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});
+    const [flaggedQuestions, setFlaggedQuestions] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [startTime] = useState(Date.now());
     const [tabSwitchCount, setTabSwitchCount] = useState(0);
     const [showInstructions, setShowInstructions] = useState(true);
+    const [showSubmitModal, setShowSubmitModal] = useState(false);
+    const [copiedIdx, setCopiedIdx] = useState(null);
+
+    // Proctoring
     const [proctoringViolations, setProctoringViolations] = useState(0);
-    const [proctoringTerminated, setProctoringTerminated] = useState(false);
     const proctoringTerminatedRef = useRef(false);
 
     useEffect(() => {
         fetchExam();
 
-        // Disable right-click
+        // Right-click prevention
         const handleContextMenu = (e) => e.preventDefault();
         document.addEventListener('contextmenu', handleContextMenu);
 
@@ -52,7 +59,7 @@ function ExamInterface() {
         const handleVisibilityChange = () => {
             if (document.hidden && !showInstructions) {
                 setTabSwitchCount(prev => prev + 1);
-                alert('Warning: Tab switching is being monitored!');
+                alert('⚠️ Tab switching is recorded.');
             }
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -63,56 +70,113 @@ function ExamInterface() {
         };
     }, [showInstructions]);
 
-    // Keyboard navigation
+    // Keyboard Shortcuts (← / →, 1-4, A-D, M for flag)
     useEffect(() => {
-        if (showInstructions || !exam) return;
+        if (showInstructions || !exam || showSubmitModal) return;
 
         const handleKeyDown = (e) => {
+            const tag = e.target.tagName.toLowerCase();
+            const isInput = tag === 'input' || tag === 'textarea' || e.target.isContentEditable || e.target.closest('.monaco-editor');
+
+            if (e.key === 'Escape') {
+                setShowSubmitModal(false);
+                return;
+            }
+
+            if (isInput) return;
+
+            // Prev / Next
             if (e.key === 'ArrowLeft' && currentQuestionIndex > 0) {
+                e.preventDefault();
                 setCurrentQuestionIndex(prev => prev - 1);
             } else if (e.key === 'ArrowRight' && currentQuestionIndex < exam.questions.length - 1) {
+                e.preventDefault();
                 setCurrentQuestionIndex(prev => prev + 1);
+            }
+
+            // Flag toggle
+            if (e.key === 'm' || e.key === 'M') {
+                const currentQ = exam.questions[currentQuestionIndex];
+                if (currentQ) toggleFlag(currentQ._id);
+            }
+
+            // Option selection for MCQ
+            const currentQ = exam.questions[currentQuestionIndex];
+            if (currentQ && currentQ.type !== 'coding' && currentQ.options) {
+                const key = e.key.toUpperCase();
+                let chosen = null;
+                if (['A', 'B', 'C', 'D'].includes(key)) {
+                    const idx = key.charCodeAt(0) - 65;
+                    if (idx < currentQ.options.length) chosen = key;
+                } else if (['1', '2', '3', '4'].includes(e.key)) {
+                    const idx = parseInt(e.key, 10) - 1;
+                    if (idx < currentQ.options.length) chosen = String.fromCharCode(65 + idx);
+                }
+
+                if (chosen) {
+                    e.preventDefault();
+                    handleAnswer(currentQ._id, chosen);
+                }
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [showInstructions, exam, currentQuestionIndex]);
+    }, [showInstructions, exam, currentQuestionIndex, showSubmitModal]);
 
     const fetchExam = async () => {
         try {
             const response = await examAPI.getById(examId);
-
-            if (!response.data.exam) {
-                setError('Exam not found');
+            if (!response.data.exam || !response.data.exam.questions?.length) {
+                setError('Exam not found or has no questions.');
                 return;
             }
-
-            if (!response.data.exam.questions || response.data.exam.questions.length === 0) {
-                setError('This exam has no questions');
-                return;
-            }
-
             setExam(response.data.exam);
-        } catch (error) {
-            console.error('Error fetching exam:', error);
-            setError(error.response?.data?.message || 'Failed to load exam. Please try again.');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to load exam.');
         } finally {
             setLoading(false);
         }
     };
 
     const handleAnswer = (questionId, answer) => {
-        setAnswers({
-            ...answers,
-            [questionId]: answer
+        setAnswers(prev => ({ ...prev, [questionId]: answer }));
+    };
+
+    const handleClearAnswer = (questionId) => {
+        setAnswers(prev => {
+            const updated = { ...prev };
+            delete updated[questionId];
+            return updated;
         });
     };
 
-    const handleSubmit = async (isProctoring = false) => {
-        if (!isProctoring && !window.confirm('Are you sure you want to submit the exam?')) return;
+    const toggleFlag = (questionId) => {
+        setFlaggedQuestions(prev => ({ ...prev, [questionId]: !prev[questionId] }));
+    };
 
+    const handleSaveAndNext = (questionId) => {
+        if (currentQuestionIndex < exam.questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+        }
+    };
+
+    const handleMarkAndNext = (questionId) => {
+        toggleFlag(questionId);
+        if (currentQuestionIndex < exam.questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+        }
+    };
+
+    const handleCopyTestCase = (text, idx) => {
+        navigator.clipboard.writeText(text || '');
+        setCopiedIdx(idx);
+        setTimeout(() => setCopiedIdx(null), 1500);
+    };
+
+    const handleSubmit = async (isAuto = false) => {
         setSubmitting(true);
+        setShowSubmitModal(false);
         const timeTaken = Math.floor((Date.now() - startTime) / 1000);
 
         const formattedAnswers = exam.questions.map(q => ({
@@ -126,435 +190,418 @@ function ExamInterface() {
                 answers: formattedAnswers,
                 timeTaken,
                 tabSwitchCount,
-                proctoringTerminated: isProctoring || proctoringTerminatedRef.current
+                proctoringTerminated: isAuto || proctoringTerminatedRef.current
             });
-
             navigate(`/student/result/${response.data.result.id}`);
-        } catch (error) {
-            alert('Error submitting exam: ' + (error.response?.data?.message || error.message));
+        } catch (err) {
+            alert('Submission error: ' + (err.response?.data?.message || err.message));
             setSubmitting(false);
         }
     };
 
-    const handleProctoringViolation = (count) => {
-        setProctoringViolations(count);
-    };
-
     const handleProctoringTerminate = () => {
-        setProctoringTerminated(true);
         proctoringTerminatedRef.current = true;
-        alert('⚠️ Exam terminated due to proctoring violations! Your exam will be auto-submitted.');
+        alert('⚠️ Exam terminated due to proctoring violation. Auto-submitting...');
         handleSubmit(true);
     };
 
-    const getAnsweredCount = useCallback(() => {
-        if (!exam) return 0;
-        return exam.questions.filter(q => answers[q._id]).length;
-    }, [exam, answers]);
+    const answeredCount = exam ? exam.questions.filter(q => answers[q._id] && answers[q._id].toString().trim()).length : 0;
+    const flaggedCount = exam ? exam.questions.filter(q => flaggedQuestions[q._id]).length : 0;
+    const unansweredCount = exam ? exam.questions.length - answeredCount : 0;
 
-    // ─── Loading ────────────────────────────────────
+    // Loading State
     if (loading) return <LoadingSpinner />;
 
-    // ─── Error State ────────────────────────────────
+    // Error State
     if (error) {
         return (
-            <>
-                <Navbar />
-                <div className="exam-instructions-wrapper">
-                    <div className="exam-instructions-card" style={{ textAlign: 'center', maxWidth: '520px' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#f87171' }}>
-                            <FaExclamationTriangle />
-                        </div>
-                        <h2 style={{ color: '#f87171', marginBottom: '0.75rem' }}>Something went wrong</h2>
-                        <p style={{ fontSize: '1.05rem', color: '#64748b', marginBottom: '2rem' }}>{error}</p>
-                        <button
-                            onClick={() => navigate('/student/dashboard')}
-                            className="exam-start-btn"
-                            style={{ maxWidth: '280px', margin: '0 auto' }}
-                        >
-                            Back to Dashboard
-                        </button>
-                    </div>
+            <div className="apt-instructions-wrapper">
+                <div className="apt-card" style={{ textAlign: 'center', maxWidth: '440px' }}>
+                    <FaExclamationTriangle style={{ fontSize: '2.5rem', color: '#ef4444', marginBottom: '1rem' }} />
+                    <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Unable to Load Exam</h2>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>{error}</p>
+                    <button className="btn-apt-primary" onClick={() => navigate('/student/dashboard')}>
+                        Return to Dashboard
+                    </button>
                 </div>
-            </>
+            </div>
         );
     }
 
-    if (!exam) return <div>Exam not found</div>;
+    if (!exam) return null;
 
-    // ─── Instructions Screen ────────────────────────
+    // Instructions Screen
     if (showInstructions) {
         return (
-            <>
-                <Navbar />
-                <div className="exam-instructions-wrapper">
-                    <div className="exam-instructions-card">
+            <div className="apt-instructions-wrapper">
+                <div className="apt-card instructions-card">
+                    <div className="inst-header">
+                        <span className="inst-tag">{exam.subject?.name || 'Assessment'}</span>
                         <h1>{exam.title}</h1>
-                        <p className="exam-desc">{exam.description}</p>
-
-                        {/* Quick info grid */}
-                        <div className="exam-info-grid">
-                            <div className="exam-info-item">
-                                <span className="info-icon">⏱️</span>
-                                <span className="info-value">{exam.duration}</span>
-                                <span className="info-label">Minutes</span>
-                            </div>
-                            <div className="exam-info-item">
-                                <span className="info-icon">📝</span>
-                                <span className="info-value">{exam.questions.length}</span>
-                                <span className="info-label">Questions</span>
-                            </div>
-                            <div className="exam-info-item">
-                                <span className="info-icon">🏆</span>
-                                <span className="info-value">{exam.totalMarks}</span>
-                                <span className="info-label">Total Marks</span>
-                            </div>
-                        </div>
-
-                        {/* Rules */}
-                        <div className="exam-rules-section">
-                            <h3>
-                                <FaShieldAlt style={{ color: '#2563eb' }} />
-                                Exam Guidelines
-                            </h3>
-                            <ul className="exam-rules-list">
-                                <li>
-                                    <span className="rule-icon" style={{ color: '#10b981' }}>✓</span>
-                                    Your answers are saved automatically as you go
-                                </li>
-                                <li>
-                                    <span className="rule-icon" style={{ color: '#10b981' }}>✓</span>
-                                    Use the navigation dots or arrow keys ← → to move between questions
-                                </li>
-                                <li>
-                                    <span className="rule-icon" style={{ color: '#10b981' }}>✓</span>
-                                    The exam will auto-submit when the timer reaches zero
-                                </li>
-                                <li>
-                                    <span className="rule-icon" style={{ color: '#f59e0b' }}>⚠</span>
-                                    Do not switch tabs — tab switches are being monitored
-                                </li>
-                                <li>
-                                    <span className="rule-icon" style={{ color: '#f59e0b' }}>⚠</span>
-                                    Right-click has been disabled during the exam
-                                </li>
-                                <li className="rule-danger">
-                                    <span className="rule-icon"><FaVideo /></span>
-                                    Camera will monitor your head position — looking away may result in exam termination
-                                </li>
-                            </ul>
-                        </div>
-
-                        <button
-                            onClick={() => setShowInstructions(false)}
-                            className="exam-start-btn"
-                        >
-                            <FaPlay style={{ fontSize: '0.9rem' }} />
-                            Begin Exam
-                        </button>
+                        <p>{exam.description || 'Answer the questions within the allotted time limit.'}</p>
                     </div>
+
+                    <div className="inst-stats">
+                        <div className="inst-stat-box">
+                            <span className="inst-val">{exam.duration}m</span>
+                            <span className="inst-lbl">Duration</span>
+                        </div>
+                        <div className="inst-stat-box">
+                            <span className="inst-val">{exam.questions.length}</span>
+                            <span className="inst-lbl">Questions</span>
+                        </div>
+                        <div className="inst-stat-box">
+                            <span className="inst-val">{exam.totalMarks}</span>
+                            <span className="inst-lbl">Total Marks</span>
+                        </div>
+                    </div>
+
+                    <div className="inst-rules">
+                        <h3>Quick Instructions</h3>
+                        <ul>
+                            <li>Click any option or press <kbd>A</kbd>, <kbd>B</kbd>, <kbd>C</kbd>, <kbd>D</kbd> on your keyboard.</li>
+                            <li>Use the Question Palette on the right to jump to any question instantly.</li>
+                            <li>Answers are automatically saved as you go.</li>
+                            <li>Click <strong>Submit Exam</strong> when you are finished.</li>
+                        </ul>
+                    </div>
+
+                    <button className="btn-apt-primary start-btn" onClick={() => setShowInstructions(false)}>
+                        <FaPlay style={{ fontSize: '0.8rem' }} /> Start Exam
+                    </button>
                 </div>
-            </>
+            </div>
         );
     }
 
     const currentQuestion = exam.questions[currentQuestionIndex];
-
-    // Safety check
-    if (!currentQuestion) {
-        return (
-            <>
-                <Navbar />
-                <div className="exam-instructions-wrapper">
-                    <div className="exam-instructions-card" style={{ textAlign: 'center', maxWidth: '520px' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#f87171' }}>
-                            <FaExclamationTriangle />
-                        </div>
-                        <h2 style={{ color: '#f87171', marginBottom: '0.75rem' }}>No Questions Available</h2>
-                        <p style={{ fontSize: '1.05rem', color: '#64748b', marginBottom: '2rem' }}>
-                            This exam does not have any questions yet. Please contact your administrator.
-                        </p>
-                        <button
-                            onClick={() => navigate('/student/dashboard')}
-                            className="exam-start-btn"
-                            style={{ maxWidth: '280px', margin: '0 auto' }}
-                        >
-                            Back to Dashboard
-                        </button>
-                    </div>
-                </div>
-            </>
-        );
-    }
-
-    // Check if question is a populated object or just an ID
-    if (typeof currentQuestion === 'string' || !currentQuestion.questionText) {
-        return (
-            <>
-                <Navbar />
-                <div className="exam-instructions-wrapper">
-                    <div className="exam-instructions-card" style={{ textAlign: 'center', maxWidth: '520px' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#f87171' }}>
-                            <FaSyncAlt />
-                        </div>
-                        <h2 style={{ color: '#f87171', marginBottom: '0.75rem' }}>Questions Not Loaded</h2>
-                        <p style={{ fontSize: '1.05rem', color: '#64748b', marginBottom: '2rem' }}>
-                            Questions could not be loaded properly. Please go back and try again.
-                        </p>
-                        <button
-                            onClick={() => navigate('/student/dashboard')}
-                            className="exam-start-btn"
-                            style={{ maxWidth: '280px', margin: '0 auto' }}
-                        >
-                            Back to Dashboard
-                        </button>
-                    </div>
-                </div>
-            </>
-        );
-    }
-
-    const isCodingQuestion = currentQuestion.type === 'coding';
-    const answeredCount = getAnsweredCount();
-    const progressPercent = (answeredCount / exam.questions.length) * 100;
+    const isCoding = currentQuestion?.type === 'coding';
+    const isFlagged = Boolean(flaggedQuestions[currentQuestion._id]);
 
     return (
-        <>
-            {/* Face Monitor */}
+        <div className="apt-exam-root">
+            {/* Webcam Proctoring */}
             <FaceMonitor
                 active={!showInstructions}
-                onViolation={handleProctoringViolation}
+                onViolation={(c) => setProctoringViolations(c)}
                 onTerminate={handleProctoringTerminate}
             />
 
-            {/* ─── Exam Header ─────────────────────────────── */}
-            <div className="exam-header">
-                <div className="exam-header-left">
-                    <h2 className="exam-header-title">{exam.title}</h2>
-                    <span className="exam-q-counter">
-                        {currentQuestionIndex + 1} / {exam.questions.length}
-                    </span>
+            {/* ─── Top Bar ─── */}
+            <header className="apt-top-bar">
+                <div className="top-bar-left">
+                    <span className="apt-subject-pill">{exam.subject?.name || 'Exam'}</span>
+                    <h2 className="apt-exam-title">{exam.title}</h2>
                 </div>
 
-                {/* Question navigator dots */}
-                <div className="exam-header-center">
-                    <div className="exam-progress-dots">
-                        {exam.questions.map((q, idx) => (
-                            <button
-                                key={idx}
-                                className={`progress-dot ${idx === currentQuestionIndex ? 'active' : ''} ${answers[q._id] ? 'answered' : ''}`}
-                                onClick={() => setCurrentQuestionIndex(idx)}
-                                title={`Question ${idx + 1}${answers[q._id] ? ' (answered)' : ''}`}
-                            >
-                                {answers[q._id] ? '✓' : idx + 1}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="exam-header-right">
-                    <Timer duration={exam.duration} onTimeUp={() => handleSubmit()} />
+                <div className="top-bar-right">
+                    <Timer duration={exam.duration} onTimeUp={() => handleSubmit(true)} />
                     <button
-                        onClick={() => handleSubmit()}
+                        type="button"
+                        className="btn-apt-submit"
+                        onClick={() => setShowSubmitModal(true)}
                         disabled={submitting}
-                        className="exam-submit-btn"
                     >
-                        <FaPaperPlane />
                         {submitting ? 'Submitting...' : 'Submit Exam'}
                     </button>
                 </div>
-            </div>
+            </header>
 
-            {/* Progress bar */}
-            <div className="exam-progress-bar-wrapper">
-                <div className="exam-progress-bar" style={{ width: `${progressPercent}%` }} />
-            </div>
-
-            {/* ─── Exam Body ───────────────────────────────── */}
-            <div className="exam-body">
-                {isCodingQuestion ? (
-                    /* ─── Coding Question Layout ──────────── */
-                    <div className="exam-coding-layout">
-                        {/* Left: Problem Statement */}
-                        <div className="exam-problem-panel">
-                            <div className="exam-problem-header">
-                                <div className="exam-question-meta">
-                                    <span className="badge badge-primary">
-                                        Q{currentQuestionIndex + 1}
-                                    </span>
-                                    <span className="badge badge-success">CODING</span>
-                                    <span className="badge badge-warning">
-                                        {currentQuestion.marks} marks
-                                    </span>
+            {/* ─── Main Aptitude Body ─── */}
+            <main className="apt-main-layout">
+                {isCoding ? (
+                    /* ─── Coding Layout ─── */
+                    <div className="apt-coding-wrapper">
+                        {/* Left: Problem Pane */}
+                        <div className="apt-problem-pane">
+                            <div className="pane-header-row">
+                                <div className="q-badge-group">
+                                    <span className="q-badge">Question {currentQuestionIndex + 1}</span>
+                                    <span className="q-tag-code"><FaCode /> Coding</span>
+                                    <span className="q-marks-tag">{currentQuestion.marks} Marks</span>
                                 </div>
-                                <div className="exam-nav-arrows">
-                                    <button
-                                        onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
-                                        disabled={currentQuestionIndex === 0}
-                                        className="exam-nav-arrow"
-                                    >
-                                        <FaChevronLeft />
-                                    </button>
-                                    <button
-                                        onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                                        disabled={currentQuestionIndex === exam.questions.length - 1}
-                                        className="exam-nav-arrow"
-                                    >
-                                        <FaChevronRight />
-                                    </button>
-                                </div>
+                                <button
+                                    type="button"
+                                    className={`btn-flag-pill ${isFlagged ? 'flagged' : ''}`}
+                                    onClick={() => toggleFlag(currentQuestion._id)}
+                                >
+                                    {isFlagged ? <FaBookmark /> : <FaRegBookmark />}
+                                    <span>{isFlagged ? 'Flagged' : 'Flag'}</span>
+                                </button>
                             </div>
 
-                            <div className="exam-problem-body">
-                                <h3>Problem Statement</h3>
-                                <div className="exam-problem-text">
+                            <div className="problem-text-scroll">
+                                <h3 className="section-heading">Problem Description</h3>
+                                <div className="problem-body-text">
                                     {currentQuestion.questionText}
                                 </div>
 
-                                {currentQuestion.testCases && currentQuestion.testCases.length > 0 && (
-                                    <div className="exam-testcases">
-                                        <h4>
-                                            <FaFlask style={{ color: '#6366f1' }} />
-                                            Sample Test Cases
-                                        </h4>
-                                        {currentQuestion.testCases.slice(0, 2).map((tc, index) => (
-                                            <div key={index} className="testcase-card">
-                                                <div className="testcase-label">Test Case {index + 1}</div>
-                                                <div className="testcase-row">
-                                                    <div className="testcase-row-label">Input</div>
-                                                    <pre>{tc.input}</pre>
+                                {currentQuestion.testCases?.length > 0 && (
+                                    <div className="sample-cases-block">
+                                        <h4 className="sample-heading">Sample Test Cases</h4>
+                                        {currentQuestion.testCases.map((tc, idx) => (
+                                            <div key={idx} className="sample-case-box">
+                                                <div className="sample-case-top">
+                                                    <span>Example {idx + 1}</span>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-copy-sm"
+                                                        onClick={() => handleCopyTestCase(tc.input, idx)}
+                                                    >
+                                                        {copiedIdx === idx ? <><FaCheck /> Copied</> : <><FaCopy /> Copy Input</>}
+                                                    </button>
                                                 </div>
-                                                <div className="testcase-row">
-                                                    <div className="testcase-row-label">Expected Output</div>
-                                                    <pre>{tc.output}</pre>
+                                                <div className="sample-case-row">
+                                                    <span className="sample-lbl">Input</span>
+                                                    <pre>{tc.input || '(empty)'}</pre>
+                                                </div>
+                                                <div className="sample-case-row">
+                                                    <span className="sample-lbl">Output</span>
+                                                    <pre>{tc.output || '(empty)'}</pre>
                                                 </div>
                                             </div>
                                         ))}
-                                        {currentQuestion.testCases.length > 2 && (
-                                            <p className="testcase-more">
-                                                + {currentQuestion.testCases.length - 2} more test case(s) will be evaluated
-                                            </p>
-                                        )}
                                     </div>
                                 )}
+                            </div>
+
+                            <div className="pane-footer-bar">
+                                <button
+                                    type="button"
+                                    className="btn-prev"
+                                    disabled={currentQuestionIndex === 0}
+                                    onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+                                >
+                                    <FaChevronLeft /> Previous
+                                </button>
+                                <span className="status-label">
+                                    {answers[currentQuestion._id] ? '✓ Code Saved' : '○ Not answered'}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="btn-next"
+                                    disabled={currentQuestionIndex === exam.questions.length - 1}
+                                    onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                                >
+                                    Next <FaChevronRight />
+                                </button>
                             </div>
                         </div>
 
                         {/* Right: Code Editor */}
-                        <div className="exam-editor-panel">
-                            <div className="exam-editor-body">
-                                <CodeEditor
-                                    language={exam.subject.language}
-                                    initialCode={answers[currentQuestion._id] || ''}
-                                    testCases={currentQuestion.testCases}
-                                    onCodeChange={(code) => handleAnswer(currentQuestion._id, code)}
-                                />
-                            </div>
+                        <div className="apt-editor-pane">
+                            <CodeEditor
+                                language={exam.subject?.language || 'python'}
+                                initialCode={answers[currentQuestion._id] || ''}
+                                testCases={currentQuestion.testCases}
+                                onCodeChange={(code) => handleAnswer(currentQuestion._id, code)}
+                            />
                         </div>
                     </div>
                 ) : (
-                    /* ─── MCQ Question Layout ─────────────── */
-                    <div className="exam-mcq-wrapper">
-                        <div className="exam-mcq-card">
-                            {/* Question Header */}
-                            <div className="exam-question-header">
-                                <div className="exam-question-meta">
-                                    <span className="badge badge-primary">
-                                        Question {currentQuestionIndex + 1} of {exam.questions.length}
-                                    </span>
-                                    <span className="badge badge-primary">MCQ</span>
-                                    <span className="badge badge-warning">
-                                        {currentQuestion.marks} marks
-                                    </span>
-                                </div>
-                                <div className="exam-nav-arrows">
-                                    <button
-                                        onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
-                                        disabled={currentQuestionIndex === 0}
-                                        className="exam-nav-arrow"
-                                    >
-                                        <FaChevronLeft />
-                                    </button>
-                                    <button
-                                        onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                                        disabled={currentQuestionIndex === exam.questions.length - 1}
-                                        className="exam-nav-arrow"
-                                    >
-                                        <FaChevronRight />
-                                    </button>
-                                </div>
-                            </div>
+                    /* ─── Aptitude / MCQ Comfortable 2-Column Layout ─── */
+                    <div className="apt-mcq-layout">
+                        {/* Left Column: Question & Options (Comfortable, large, legible) */}
+                        <div className="apt-question-area">
+                            <div className="apt-question-card">
+                                {/* Question Top Bar */}
+                                <div className="apt-q-header">
+                                    <div className="apt-q-meta">
+                                        <span className="apt-q-number">Question {currentQuestionIndex + 1}</span>
+                                        <span className="apt-q-marks">{currentQuestion.marks} Marks</span>
+                                    </div>
 
-                            {/* Question Text */}
-                            <div className="exam-question-text">
-                                {currentQuestion.questionText}
-                            </div>
-
-                            {/* Options */}
-                            <div className="exam-options-list">
-                                {(currentQuestion.options || []).map((option, index) => {
-                                    const optionLetter = String.fromCharCode(65 + index);
-                                    const isSelected = answers[currentQuestion._id] === optionLetter;
-                                    return (
-                                        <label
-                                            key={index}
-                                            className={`exam-option ${isSelected ? 'selected' : ''}`}
-                                            onClick={() => handleAnswer(currentQuestion._id, optionLetter)}
+                                    <div className="apt-q-actions">
+                                        <button
+                                            type="button"
+                                            className={`btn-flag-pill ${isFlagged ? 'flagged' : ''}`}
+                                            onClick={() => toggleFlag(currentQuestion._id)}
+                                            title="Bookmark for review (M)"
                                         >
-                                            <input
-                                                type="radio"
-                                                name={`question-${currentQuestion._id}`}
-                                                value={optionLetter}
-                                                checked={isSelected}
-                                                onChange={() => {}}
-                                            />
-                                            <div className="exam-option-indicator">
-                                                {isSelected ? <FaCheckCircle style={{ fontSize: '1rem' }} /> : optionLetter}
-                                            </div>
-                                            <span className="exam-option-text">{option}</span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
+                                            {isFlagged ? <FaBookmark /> : <FaRegBookmark />}
+                                            <span>{isFlagged ? 'Marked for Review' : 'Mark for Review'}</span>
+                                        </button>
 
-                            {/* Bottom navigation */}
-                            <div className="exam-bottom-nav">
-                                <div className="exam-bottom-nav-info">
-                                    <span className="exam-answered-count">
-                                        <strong>{answeredCount}</strong> of {exam.questions.length} answered
-                                    </span>
+                                        {answers[currentQuestion._id] && (
+                                            <button
+                                                type="button"
+                                                className="btn-clear-pill"
+                                                onClick={() => handleClearAnswer(currentQuestion._id)}
+                                                title="Clear option"
+                                            >
+                                                <FaEraser /> Clear
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="exam-nav-arrows">
-                                    <button
-                                        onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
-                                        disabled={currentQuestionIndex === 0}
-                                        className="exam-nav-arrow"
-                                        style={{ width: '42px', height: '42px' }}
-                                    >
-                                        <FaChevronLeft />
-                                    </button>
-                                    <button
-                                        onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                                        disabled={currentQuestionIndex === exam.questions.length - 1}
-                                        className="exam-nav-arrow"
-                                        style={{ width: '42px', height: '42px' }}
-                                    >
-                                        <FaChevronRight />
-                                    </button>
+
+                                {/* Question Statement */}
+                                <div className="apt-q-text">
+                                    {currentQuestion.questionText}
+                                </div>
+
+                                {/* Options List */}
+                                <div className="apt-options-list">
+                                    {(currentQuestion.options || []).map((option, index) => {
+                                        const letter = String.fromCharCode(65 + index);
+                                        const isSelected = answers[currentQuestion._id] === letter;
+
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`apt-option-row ${isSelected ? 'selected' : ''}`}
+                                                onClick={() => handleAnswer(currentQuestion._id, letter)}
+                                            >
+                                                <div className="apt-option-bullet">
+                                                    {letter}
+                                                </div>
+                                                <div className="apt-option-body">
+                                                    {option}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Bottom Action Row */}
+                                <div className="apt-bottom-actions">
+                                    <div className="bottom-left">
+                                        <button
+                                            type="button"
+                                            className="btn-apt-secondary"
+                                            disabled={currentQuestionIndex === 0}
+                                            onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+                                        >
+                                            <FaChevronLeft /> Previous
+                                        </button>
+                                    </div>
+
+                                    <div className="bottom-right">
+                                        <button
+                                            type="button"
+                                            className="btn-apt-review"
+                                            onClick={() => handleMarkAndNext(currentQuestion._id)}
+                                        >
+                                            <FaBookmark /> Mark & Next
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="btn-apt-primary-save"
+                                            onClick={() => handleSaveAndNext(currentQuestion._id)}
+                                        >
+                                            Save & Next <FaChevronRight />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column: Always Visible Question Palette Grid */}
+                        <div className="apt-sidebar-palette">
+                            <div className="palette-box">
+                                <div className="palette-header">
+                                    <h3>Question Palette</h3>
+                                    <span className="palette-count">{answeredCount}/{exam.questions.length}</span>
+                                </div>
+
+                                {/* Legend Chips */}
+                                <div className="palette-chips-row">
+                                    <div className="chip answered">
+                                        <span className="chip-count">{answeredCount}</span> Answered
+                                    </div>
+                                    <div className="chip not-answered">
+                                        <span className="chip-count">{unansweredCount}</span> Unanswered
+                                    </div>
+                                    <div className="chip flagged">
+                                        <span className="chip-count">{flaggedCount}</span> Flagged
+                                    </div>
+                                </div>
+
+                                {/* Questions Matrix Grid */}
+                                <div className="palette-matrix">
+                                    {exam.questions.map((q, idx) => {
+                                        const isAns = Boolean(answers[q._id]?.toString().trim());
+                                        const isFlg = Boolean(flaggedQuestions[q._id]);
+                                        const isCur = idx === currentQuestionIndex;
+
+                                        let statusClass = 'unanswered';
+                                        if (isAns) statusClass = 'answered';
+                                        if (isFlg) statusClass = 'flagged';
+
+                                        return (
+                                            <button
+                                                key={q._id || idx}
+                                                type="button"
+                                                className={`matrix-btn ${statusClass} ${isCur ? 'active' : ''}`}
+                                                onClick={() => setCurrentQuestionIndex(idx)}
+                                                title={`Question ${idx + 1}`}
+                                            >
+                                                {idx + 1}
+                                                {isFlg && <span className="flag-corner"></span>}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
-            </div>
+            </main>
 
-            {/* Keyboard shortcut hints */}
-            <div className="exam-keyboard-hints">
-                <span className="keyboard-hint">
-                    <kbd>←</kbd><kbd>→</kbd> Navigate
-                </span>
-            </div>
-        </>
+            {/* ─── Submit Confirmation Modal ─── */}
+            {showSubmitModal && (
+                <div className="apt-modal-overlay" onClick={() => setShowSubmitModal(false)}>
+                    <div className="apt-submit-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-icon-wrap">
+                            <FaShieldAlt />
+                        </div>
+                        <h3>Submit Exam</h3>
+                        <p>Are you sure you want to finish and submit your exam?</p>
+
+                        <div className="modal-summary-grid">
+                            <div className="summary-item answered">
+                                <span className="summary-number">{answeredCount}</span>
+                                <span className="summary-text">Answered</span>
+                            </div>
+                            <div className="summary-item unanswered">
+                                <span className="summary-number">{unansweredCount}</span>
+                                <span className="summary-text">Unanswered</span>
+                            </div>
+                            <div className="summary-item flagged">
+                                <span className="summary-number">{flaggedCount}</span>
+                                <span className="summary-text">Flagged</span>
+                            </div>
+                        </div>
+
+                        {unansweredCount > 0 && (
+                            <div className="unanswered-warning">
+                                <FaExclamationTriangle />
+                                <span>You have <strong>{unansweredCount} unanswered questions</strong>.</span>
+                            </div>
+                        )}
+
+                        <div className="modal-btn-row">
+                            <button
+                                type="button"
+                                className="btn-modal-cancel"
+                                onClick={() => setShowSubmitModal(false)}
+                            >
+                                Back to Exam
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-modal-confirm"
+                                onClick={() => handleSubmit(false)}
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Submitting...' : 'Confirm Submit'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

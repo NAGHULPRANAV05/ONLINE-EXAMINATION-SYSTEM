@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FaClock } from 'react-icons/fa';
 
 function Timer({ duration, onTimeUp }) {
-    const [timeLeft, setTimeLeft] = useState(duration * 60); // Convert minutes to seconds
+    const [timeLeft, setTimeLeft] = useState(duration * 60);
 
     useEffect(() => {
         if (timeLeft <= 0) {
@@ -11,7 +11,14 @@ function Timer({ duration, onTimeUp }) {
         }
 
         const timer = setInterval(() => {
-            setTimeLeft((prev) => prev - 1);
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    onTimeUp();
+                    return 0;
+                }
+                return prev - 1;
+            });
         }, 1000);
 
         return () => clearInterval(timer);
@@ -19,41 +26,17 @@ function Timer({ duration, onTimeUp }) {
 
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
-
-    const getColor = () => {
-        if (timeLeft > 600) return '#4ade80'; // Green
-        if (timeLeft > 300) return '#fbbf24'; // Yellow
-        return '#f87171'; // Red
-    };
+    const isCritical = timeLeft <= 300; // Under 5 mins
+    const isWarning = timeLeft <= 600 && !isCritical; // 5-10 mins
 
     return (
-        <div style={{ ...styles.timer, color: getColor() }}>
-            <div style={styles.icon}><FaClock /></div>
-            <div style={styles.time}>
+        <div className={`clean-timer ${isCritical ? 'critical' : isWarning ? 'warning' : ''}`} title="Time Remaining">
+            <FaClock className="timer-icon" />
+            <span className="timer-time">
                 {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-            </div>
+            </span>
         </div>
     );
 }
-
-const styles = {
-    timer: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        padding: '0.75rem 1.5rem',
-        background: 'rgba(241, 245, 249, 0.9)',
-        borderRadius: '0.5rem',
-        fontSize: '1.5rem',
-        fontWeight: 700,
-        border: '2px solid currentColor'
-    },
-    icon: {
-        fontSize: '1.75rem'
-    },
-    time: {
-        fontFamily: 'monospace'
-    }
-};
 
 export default Timer;

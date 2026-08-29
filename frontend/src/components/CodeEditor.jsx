@@ -1,206 +1,370 @@
-import { useState } from 'react';
-import { FaCheckCircle, FaTimesCircle, FaPlay, FaSpinner, FaFlask } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import {
+    FaPlay,
+    FaSpinner,
+    FaUndo,
+    FaCheckCircle,
+    FaTimesCircle,
+    FaChevronUp,
+    FaChevronDown,
+    FaFlask,
+    FaTerminal
+} from 'react-icons/fa';
 import Editor from '@monaco-editor/react';
 import { codeAPI } from '../services/api';
 
-function CodeEditor({ language, initialCode = '', testCases = [], onCodeChange }) {
-    const [code, setCode] = useState(initialCode);
-    const [output, setOutput] = useState('');
+const STARTER_TEMPLATES = {
+    python: `# Python 3 Solution
+import sys
+
+def solve():
+    input_data = sys.stdin.read().split()
+    if not input_data:
+        return
+    
+    # Write your solution here
+    
+
+if __name__ == '__main__':
+    solve()
+`,
+    cpp: `// C++17 Solution
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+using namespace std;
+
+int main() {
+    // Write your solution here
+    
+    return 0;
+}
+`,
+    c: `// C Solution
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    // Write your solution here
+    
+    return 0;
+}
+`,
+    java: `// Java Solution
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        // Write your solution here
+        
+        scanner.close();
+    }
+}
+`
+};
+
+function CodeEditor({ language = 'python', initialCode = '', testCases = [], onCodeChange }) {
+    const langKey = (language || 'python').toLowerCase();
+    const defaultTemplate = STARTER_TEMPLATES[langKey] || STARTER_TEMPLATES.python;
+
+    const [code, setCode] = useState(initialCode && initialCode.trim() ? initialCode : defaultTemplate);
+    const [activeTab, setActiveTab] = useState('tests'); // 'tests' | 'custom'
+    const [selectedCaseIdx, setSelectedCaseIdx] = useState(0);
+    const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+
+    // Custom Input state
+    const [customInput, setCustomInput] = useState('');
+    const [customOutput, setCustomOutput] = useState('');
+    const [isCustomRunning, setIsCustomRunning] = useState(false);
+
+    // Execution states
     const [isRunning, setIsRunning] = useState(false);
     const [testResults, setTestResults] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
+
+    useEffect(() => {
+        if (initialCode && initialCode.trim() && initialCode !== code) {
+            setCode(initialCode);
+        } else if (!code && defaultTemplate) {
+            setCode(defaultTemplate);
+        }
+    }, [initialCode]);
 
     const handleCodeChange = (value) => {
-        setCode(value);
-        if (onCodeChange) {
-            onCodeChange(value);
+        const val = value || '';
+        setCode(val);
+        if (onCodeChange) onCodeChange(val);
+    };
+
+    const handleReset = () => {
+        if (window.confirm('Reset code to default template?')) {
+            const template = STARTER_TEMPLATES[langKey] || STARTER_TEMPLATES.python;
+            setCode(template);
+            if (onCodeChange) onCodeChange(template);
+            setTestResults(null);
+            setErrorMessage('');
         }
     };
 
+    // Run against sample test cases
     const runCode = async () => {
         if (!code.trim()) {
-            setOutput('Please write some code first!');
+            setErrorMessage('Please write some code first.');
             return;
         }
 
         setIsRunning(true);
-        setOutput('Running code...');
+        setErrorMessage('');
         setTestResults(null);
+        setIsConsoleOpen(true);
+        setActiveTab('tests');
 
         try {
             const response = await codeAPI.execute({
-                language,
+                language: langKey,
                 code,
-                testCases
+                testCases: testCases && testCases.length > 0 ? testCases : [{ input: '', output: '' }]
             });
 
             const result = response.data.result;
             setTestResults(result);
-
-            const passedCount = result.passedTests;
-            const totalCount = result.totalTests;
-            setOutput(`Passed: ${passedCount}/${totalCount} test cases`);
+            setSelectedCaseIdx(0);
         } catch (error) {
-            setOutput(`Error: ${error.response?.data?.message || error.message}`);
+            setErrorMessage(error.response?.data?.message || error.message || 'Execution error occurred');
         } finally {
             setIsRunning(false);
         }
     };
 
-    // SVG progress ring helpers
-    const radius = 17;
-    const circumference = 2 * Math.PI * radius;
-    const getStrokeDashoffset = (passed, total) => {
-        if (total === 0) return circumference;
-        return circumference - (passed / total) * circumference;
+    // Run with custom stdin
+    const runCustom = async () => {
+        if (!code.trim()) {
+            setCustomOutput('Please write some code first.');
+            return;
+        }
+
+        setIsCustomRunning(true);
+        setCustomOutput('Running...');
+
+        try {
+            const response = await codeAPI.execute({
+                language: langKey,
+                code,
+                testCases: [{ input: customInput, output: '' }]
+            });
+
+            const result = response.data.result;
+            if (result?.testResults?.[0]) {
+                setCustomOutput(result.testResults[0].actualOutput || '(No output)');
+            } else {
+                setCustomOutput('Execution completed.');
+            }
+        } catch (error) {
+            setCustomOutput('Error: ' + (error.response?.data?.message || error.message));
+        } finally {
+            setIsCustomRunning(false);
+        }
     };
 
-    const getRingClass = (passed, total) => {
-        if (passed === total) return 'all-pass';
-        if (passed === 0) return 'none-pass';
-        return 'partial';
+    const getMonacoLanguage = () => {
+        if (langKey === 'cpp' || langKey === 'c') return 'cpp';
+        if (langKey === 'python') return 'python';
+        if (langKey === 'java') return 'java';
+        return 'plaintext';
     };
+
+    const currentCase = testResults?.testResults?.[selectedCaseIdx] || null;
 
     return (
-        <div className="code-editor-container">
-            {/* Toolbar */}
-            <div className="code-editor-toolbar">
-                <div className="code-editor-lang-badge">
-                    <span className="lang-dot"></span>
-                    {language.toUpperCase()}
+        <div className="clean-editor-wrapper">
+            {/* Minimal Toolbar */}
+            <div className="clean-editor-toolbar">
+                <div className="editor-lang-tag">
+                    <span className="lang-indicator-dot"></span>
+                    <span>{langKey.toUpperCase()}</span>
                 </div>
-                <button
-                    onClick={runCode}
-                    disabled={isRunning}
-                    className={`code-editor-run-btn ${isRunning ? 'running' : ''}`}
-                >
-                    {isRunning ? (
-                        <>
-                            <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
-                            Running…
-                        </>
-                    ) : (
-                        <>
-                            <FaPlay style={{ fontSize: '0.7rem' }} />
-                            Run Code
-                        </>
-                    )}
-                </button>
+
+                <div className="editor-actions">
+                    <button
+                        type="button"
+                        className="btn-editor-action"
+                        onClick={handleReset}
+                        title="Reset code template"
+                    >
+                        <FaUndo style={{ fontSize: '0.75rem' }} />
+                        <span>Reset</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="btn-editor-run"
+                        onClick={runCode}
+                        disabled={isRunning}
+                    >
+                        {isRunning ? (
+                            <>
+                                <FaSpinner className="spin" />
+                                <span>Running...</span>
+                            </>
+                        ) : (
+                            <>
+                                <FaPlay style={{ fontSize: '0.7rem' }} />
+                                <span>Run Code</span>
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
 
-            {/* Monaco Editor */}
-            <div className="code-editor-body">
+            {/* Editor Container */}
+            <div className="clean-editor-area">
                 <Editor
                     height="100%"
-                    language={language === 'cpp' ? 'cpp' : language}
+                    language={getMonacoLanguage()}
                     value={code}
                     onChange={handleCodeChange}
-                    theme="vs-dark"
+                    theme="light"
                     options={{
                         minimap: { enabled: false },
                         fontSize: 14,
                         lineNumbers: 'on',
                         scrollBeyondLastLine: false,
                         automaticLayout: true,
-                        fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+                        fontFamily: "'JetBrains Mono', Consolas, monospace",
                         fontLigatures: true,
-                        padding: { top: 12 },
-                        renderLineHighlight: 'gutter',
+                        padding: { top: 12, bottom: 12 },
+                        renderLineHighlight: 'all',
                         smoothScrolling: true,
-                        cursorBlinking: 'smooth',
-                        cursorSmoothCaretAnimation: 'on',
+                        tabSize: 4,
+                        wordWrap: 'on'
                     }}
                 />
             </div>
 
-            {/* Test Results Panel */}
-            {testResults && testResults.testResults && testResults.testResults.length > 0 ? (
-                <div className="test-results-panel">
-                    {/* Summary header */}
-                    <div className="test-results-summary">
-                        <div className="test-results-title">
-                            <FaFlask className="results-icon" style={{ color: '#818cf8' }} />
-                            Test Results
-                        </div>
-                        <div className="test-results-stats">
-                            <span className="test-stat-badge passed">
-                                <FaCheckCircle className="stat-icon" />
-                                {testResults.passedTests} Passed
-                            </span>
-                            {testResults.totalTests - testResults.passedTests > 0 && (
-                                <span className="test-stat-badge failed">
-                                    <FaTimesCircle className="stat-icon" />
-                                    {testResults.totalTests - testResults.passedTests} Failed
+            {/* Minimal Console Panel */}
+            <div className={`clean-console ${!isConsoleOpen ? 'collapsed' : ''}`}>
+                {/* Console Bar */}
+                <div className="clean-console-header">
+                    <div className="console-tabs">
+                        <button
+                            type="button"
+                            className={`c-tab ${activeTab === 'tests' ? 'active' : ''}`}
+                            onClick={() => { setActiveTab('tests'); setIsConsoleOpen(true); }}
+                        >
+                            <FaFlask />
+                            <span>Test Cases</span>
+                            {testResults && (
+                                <span className={`c-badge ${testResults.passedTests === testResults.totalTests ? 'pass' : 'fail'}`}>
+                                    {testResults.passedTests}/{testResults.totalTests} Passed
                                 </span>
                             )}
-                            {/* Progress ring */}
-                            <div className="test-progress-ring">
-                                <svg width="42" height="42" viewBox="0 0 42 42">
-                                    <circle className="ring-bg" cx="21" cy="21" r={radius} />
-                                    <circle
-                                        className={`ring-fill ${getRingClass(testResults.passedTests, testResults.totalTests)}`}
-                                        cx="21" cy="21" r={radius}
-                                        strokeDasharray={circumference}
-                                        strokeDashoffset={getStrokeDashoffset(testResults.passedTests, testResults.totalTests)}
-                                    />
-                                </svg>
-                                <div className="ring-text">
-                                    {testResults.passedTests}/{testResults.totalTests}
-                                </div>
-                            </div>
-                        </div>
+                        </button>
+
+                        <button
+                            type="button"
+                            className={`c-tab ${activeTab === 'custom' ? 'active' : ''}`}
+                            onClick={() => { setActiveTab('custom'); setIsConsoleOpen(true); }}
+                        >
+                            <FaTerminal />
+                            <span>Custom Input</span>
+                        </button>
                     </div>
 
-                    {/* Individual test results */}
-                    <div className="test-results-list">
-                        {testResults.testResults.map((test, index) => (
-                            <div key={index} className={`test-result-item ${test.passed ? 'passed' : 'failed'}`}>
-                                <div className="test-result-header">
-                                    <div className="test-result-label">
-                                        {test.passed
-                                            ? <FaCheckCircle className="result-icon pass" />
-                                            : <FaTimesCircle className="result-icon fail" />
-                                        }
-                                        <span className="result-name">Test Case {index + 1}</span>
+                    <button
+                        type="button"
+                        className="btn-toggle-console"
+                        onClick={() => setIsConsoleOpen(prev => !prev)}
+                        title={isConsoleOpen ? 'Collapse Console' : 'Expand Console'}
+                    >
+                        {isConsoleOpen ? <FaChevronDown /> : <FaChevronUp />}
+                    </button>
+                </div>
+
+                {/* Console Content */}
+                {isConsoleOpen && (
+                    <div className="clean-console-body">
+                        {errorMessage ? (
+                            <div className="console-error-box">
+                                {errorMessage}
+                            </div>
+                        ) : activeTab === 'tests' ? (
+                            testResults ? (
+                                <div className="tests-view">
+                                    <div className="test-case-pills">
+                                        {testResults.testResults.map((tc, idx) => (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                className={`case-pill ${selectedCaseIdx === idx ? 'active' : ''} ${tc.passed ? 'pass' : 'fail'}`}
+                                                onClick={() => setSelectedCaseIdx(idx)}
+                                            >
+                                                {tc.passed ? <FaCheckCircle /> : <FaTimesCircle />}
+                                                <span>Case {idx + 1}</span>
+                                            </button>
+                                        ))}
                                     </div>
-                                    <span className={`test-result-status ${test.passed ? 'pass' : 'fail'}`}>
-                                        {test.passed ? 'PASSED' : 'FAILED'}
-                                    </span>
+
+                                    {currentCase && (
+                                        <div className="case-content-grid">
+                                            <div className="case-col">
+                                                <span className="case-col-title">Input</span>
+                                                <pre className="case-pre">{currentCase.input || '(empty)'}</pre>
+                                            </div>
+                                            <div className="case-col">
+                                                <span className="case-col-title">Expected Output</span>
+                                                <pre className="case-pre">{currentCase.expectedOutput || '(empty)'}</pre>
+                                            </div>
+                                            <div className="case-col">
+                                                <span className="case-col-title">Your Output</span>
+                                                <pre className={`case-pre ${currentCase.passed ? 'match' : 'mismatch'}`}>
+                                                    {currentCase.actualOutput || '(no output)'}
+                                                </pre>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="test-result-detail">
-                                    <div className="test-detail-block">
-                                        <span className="test-detail-label">Input</span>
-                                        <div className="test-detail-value">
-                                            {test.input || '(no input)'}
-                                        </div>
+                            ) : (
+                                <div className="console-placeholder">
+                                    Click <strong>"Run Code"</strong> to test your solution against test cases.
+                                </div>
+                            )
+                        ) : (
+                            /* Custom Input Tab */
+                            <div className="custom-input-view">
+                                <div className="custom-split">
+                                    <div className="custom-col">
+                                        <span className="case-col-title">Standard Input</span>
+                                        <textarea
+                                            value={customInput}
+                                            onChange={(e) => setCustomInput(e.target.value)}
+                                            placeholder="Enter standard input..."
+                                            className="custom-input-box"
+                                            rows={3}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={runCustom}
+                                            disabled={isCustomRunning}
+                                            className="btn-run-custom"
+                                        >
+                                            {isCustomRunning ? 'Running...' : 'Run with Input'}
+                                        </button>
                                     </div>
-                                    <div className="test-detail-block">
-                                        <span className="test-detail-label">Expected</span>
-                                        <div className={`test-detail-value ${test.passed ? 'match' : ''}`}>
-                                            {test.expectedOutput}
-                                        </div>
-                                    </div>
-                                    <div className="test-detail-block">
-                                        <span className="test-detail-label">Output</span>
-                                        <div className={`test-detail-value ${test.passed ? 'match' : 'mismatch'}`}>
-                                            {test.actualOutput}
-                                        </div>
+                                    <div className="custom-col">
+                                        <span className="case-col-title">Standard Output</span>
+                                        <pre className="custom-output-box">
+                                            {customOutput || '(Output will appear here)'}
+                                        </pre>
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )}
                     </div>
-                </div>
-            ) : output ? (
-                <div className="code-output-console">
-                    <pre className={output.startsWith('Error') ? 'output-error' : ''}>
-                        {output}
-                    </pre>
-                </div>
-            ) : (
-                <div className="code-output-empty">
-                    Click "Run Code" to execute and see test results
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
