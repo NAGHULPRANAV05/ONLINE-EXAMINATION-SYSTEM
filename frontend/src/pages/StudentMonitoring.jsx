@@ -7,7 +7,8 @@ import {
     FaTrash, FaUsers, FaClipboardCheck, FaCheckCircle,
     FaTimesCircle, FaBookOpen, FaChartBar, FaListAlt,
     FaArrowLeft, FaSearch, FaUserGraduate, FaExternalLinkAlt,
-    FaTrophy, FaCalendarAlt, FaChevronRight, FaBan, FaCheck
+    FaTrophy, FaCalendarAlt, FaChevronRight, FaBan, FaCheck,
+    FaUserPlus, FaTimes, FaLock, FaEnvelope, FaUser
 } from 'react-icons/fa';
 import './StudentMonitoring.css';
 
@@ -24,6 +25,14 @@ function StudentMonitoring() {
     const [examSearch, setExamSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'pass' | 'fail'
     const [accountStatusFilter, setAccountStatusFilter] = useState('all'); // 'all' | 'active' | 'blocked'
+
+    // Add Student Modal State
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newStudentName, setNewStudentName] = useState('');
+    const [newStudentEmail, setNewStudentEmail] = useState('');
+    const [newStudentPassword, setNewStudentPassword] = useState('');
+    const [isSubmittingStudent, setIsSubmittingStudent] = useState(false);
+    const [addStudentError, setAddStudentError] = useState('');
 
     useEffect(() => {
         fetchData();
@@ -60,6 +69,58 @@ function StudentMonitoring() {
             fetchData();
         } catch (error) {
             alert('Error updating student status: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    // Create a new student account
+    const handleCreateStudent = async (e) => {
+        e.preventDefault();
+        setAddStudentError('');
+
+        if (!newStudentName.trim() || !newStudentEmail.trim() || !newStudentPassword.trim()) {
+            setAddStudentError('Please fill in all fields (Name, Email, and Password).');
+            return;
+        }
+
+        if (newStudentPassword.length < 6) {
+            setAddStudentError('Password must be at least 6 characters long.');
+            return;
+        }
+
+        setIsSubmittingStudent(true);
+        try {
+            await userAPI.createStudent({
+                name: newStudentName.trim(),
+                email: newStudentEmail.trim().toLowerCase(),
+                password: newStudentPassword
+            });
+
+            // Reset form and close modal
+            setNewStudentName('');
+            setNewStudentEmail('');
+            setNewStudentPassword('');
+            setIsAddModalOpen(false);
+            fetchData();
+        } catch (error) {
+            setAddStudentError(error.response?.data?.message || error.message || 'Failed to create student');
+        } finally {
+            setIsSubmittingStudent(false);
+        }
+    };
+
+    // Delete a student account permanently
+    const handleDeleteStudent = async (studentId, studentName) => {
+        const msg = `Are you sure you want to PERMANENTLY DELETE student "${studentName}"?\n\nThis will remove their portal account and all associated examination records.`;
+        if (!window.confirm(msg)) return;
+
+        try {
+            await userAPI.deleteStudent(studentId);
+            if (selectedStudentId === studentId) {
+                setSelectedStudentId(null);
+            }
+            fetchData();
+        } catch (error) {
+            alert('Error deleting student: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -182,8 +243,8 @@ function StudentMonitoring() {
         }).sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
     }, [selectedStudent, examSearch, statusFilter]);
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this result?')) return;
+    const handleDeleteResult = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this exam result?')) return;
         try {
             await resultAPI.delete(id);
             fetchData();
@@ -224,7 +285,7 @@ function StudentMonitoring() {
                     <p className="sm-mon-hero-sub">
                         {selectedStudent
                             ? `Viewing complete exam records, performance metrics, and access privileges for ${selectedStudent.name}`
-                            : 'Track student performance, assessment results, and manage portal access privileges'}
+                            : 'Track student performance, assessment results, and manage student accounts and access'}
                     </p>
                 </div>
             </div>
@@ -322,11 +383,23 @@ function StudentMonitoring() {
                                 <div className="sm-mon-section-icon results"><FaUserGraduate /></div>
                                 <div>
                                     <h2 className="sm-mon-section-title">Student Records & Access Control</h2>
-                                    <p className="sm-mon-section-subtitle">Click student name to view results, or toggle portal access</p>
+                                    <p className="sm-mon-section-subtitle">Manage student accounts, control login access, and review assessment records</p>
                                 </div>
                             </div>
 
                             <div className="sm-mon-filter-controls">
+                                <button
+                                    type="button"
+                                    className="btn-add-student-primary"
+                                    onClick={() => {
+                                        setAddStudentError('');
+                                        setIsAddModalOpen(true);
+                                    }}
+                                >
+                                    <FaUserPlus />
+                                    <span>Add Student</span>
+                                </button>
+
                                 <div className="sm-status-pills">
                                     <button
                                         type="button"
@@ -355,7 +428,7 @@ function StudentMonitoring() {
                                     <FaSearch className="search-icon" />
                                     <input
                                         type="text"
-                                        placeholder="Search student by name or email..."
+                                        placeholder="Search by name or email..."
                                         value={studentSearch}
                                         onChange={(e) => setStudentSearch(e.target.value)}
                                     />
@@ -392,7 +465,7 @@ function StudentMonitoring() {
                                         <tr>
                                             <td colSpan="8" className="sm-mon-empty-row">
                                                 {groupedStudents.length === 0
-                                                    ? "No registered students found."
+                                                    ? "No registered students found. Click '+ Add Student' to create an account."
                                                     : "No students matching your search criteria."}
                                             </td>
                                         </tr>
@@ -515,9 +588,19 @@ function StudentMonitoring() {
                                                             type="button"
                                                             className="btn-view-results"
                                                             onClick={() => setSelectedStudentId(student.id)}
+                                                            title="View student exam results"
                                                         >
                                                             <span>Results</span>
                                                             <FaChevronRight className="btn-arrow" />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="btn-delete-student"
+                                                            onClick={() => handleDeleteStudent(student.id, student.name)}
+                                                            title={`Delete ${student.name}'s account`}
+                                                        >
+                                                            <FaTrash />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -618,6 +701,15 @@ function StudentMonitoring() {
                                                 <FaBan /> Block Access
                                             </>
                                         )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="btn-profile-delete"
+                                        onClick={() => handleDeleteStudent(selectedStudent.id, selectedStudent.name)}
+                                        title={`Delete ${selectedStudent.name}`}
+                                    >
+                                        <FaTrash /> Delete Student
                                     </button>
                                 </div>
                             </div>
@@ -772,7 +864,7 @@ function StudentMonitoring() {
                                                             <button
                                                                 type="button"
                                                                 className="btn-mon-delete"
-                                                                onClick={() => handleDelete(result._id)}
+                                                                onClick={() => handleDeleteResult(result._id)}
                                                                 title="Delete this attempt"
                                                             >
                                                                 <FaTrash />
@@ -789,6 +881,100 @@ function StudentMonitoring() {
                     </div>
                 )}
             </div>
+
+            {/* ════════════════════════════════════════════════════════════════════════
+                ADD STUDENT MODAL
+               ════════════════════════════════════════════════════════════════════════ */}
+            {isAddModalOpen && (
+                <div className="sm-modal-backdrop" onClick={() => setIsAddModalOpen(false)}>
+                    <div className="sm-modal-box" onClick={(e) => e.stopPropagation()}>
+                        <div className="sm-modal-header">
+                            <div className="modal-header-icon">
+                                <FaUserPlus />
+                            </div>
+                            <div>
+                                <h3 className="modal-title">Register New Student</h3>
+                                <p className="modal-sub">Create credentials for a student to log in and take assessments</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn-modal-close"
+                                onClick={() => setIsAddModalOpen(false)}
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+
+                        {addStudentError && (
+                            <div className="sm-modal-alert error">
+                                {addStudentError}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleCreateStudent} className="sm-modal-form">
+                            <div className="form-group">
+                                <label className="form-lbl">
+                                    <FaUser style={{ marginRight: 4 }} /> Student Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="e.g. Manjunath R"
+                                    value={newStudentName}
+                                    onChange={(e) => setNewStudentName(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-lbl">
+                                    <FaEnvelope style={{ marginRight: 4 }} /> Email Address
+                                </label>
+                                <input
+                                    type="email"
+                                    className="form-input"
+                                    placeholder="e.g. manjunath@example.com"
+                                    value={newStudentEmail}
+                                    onChange={(e) => setNewStudentEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-lbl">
+                                    <FaLock style={{ marginRight: 4 }} /> Password
+                                </label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    placeholder="At least 6 characters"
+                                    value={newStudentPassword}
+                                    onChange={(e) => setNewStudentPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="sm-modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn-modal-cancel"
+                                    onClick={() => setIsAddModalOpen(false)}
+                                    disabled={isSubmittingStudent}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn-modal-submit"
+                                    disabled={isSubmittingStudent}
+                                >
+                                    {isSubmittingStudent ? 'Creating...' : 'Create Student Account'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

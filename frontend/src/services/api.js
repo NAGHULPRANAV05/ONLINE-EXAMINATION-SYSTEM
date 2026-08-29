@@ -44,7 +44,9 @@ export const authAPI = {
 // User / Student Management APIs
 export const userAPI = {
     getAllStudents: () => api.get('/auth/students'),
-    toggleBlockStudent: (id, data) => api.put(`/auth/students/${id}/block`, data)
+    createStudent: (data) => api.post('/auth/students', data),
+    toggleBlockStudent: (id, data) => api.put(`/auth/students/${id}/block`, data),
+    deleteStudent: (id) => api.delete(`/auth/students/${id}`)
 };
 
 // Subject APIs

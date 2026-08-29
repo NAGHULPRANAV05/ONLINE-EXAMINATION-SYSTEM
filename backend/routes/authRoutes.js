@@ -1,14 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, getMe, getAllStudents, toggleBlockStudent } = require('../controllers/authController');
+const {
+    register, login, getMe,
+    getAllStudents, toggleBlockStudent,
+    createStudent, deleteStudent
+} = require('../controllers/authController');
 const { protect, requireAdmin } = require('../middleware/authMiddleware');
 
 router.post('/register', register);
 router.post('/login', login);
 router.get('/me', protect, getMe);
 
-// Admin Student Management & Blocking
+// Admin Student Management (CRUD & Blocking)
 router.get('/students', protect, requireAdmin, getAllStudents);
+router.post('/students', protect, requireAdmin, createStudent);
 router.put('/students/:id/block', protect, requireAdmin, toggleBlockStudent);
+router.delete('/students/:id', protect, requireAdmin, deleteStudent);
 
 module.exports = router;

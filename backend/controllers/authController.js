@@ -225,3 +225,93 @@ exports.toggleBlockStudent = async (req, res) => {
         });
     }
 };
+
+// @desc    Create new student (Admin)
+// @route   POST /api/auth/students
+// @access  Private/Admin
+exports.createStudent = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide name, email, and password'
+            });
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'A student already exists with this email address'
+            });
+        }
+
+        const student = await User.create({
+            name,
+            email,
+            password,
+            role: 'student'
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Student created successfully',
+            student: {
+                _id: student._id,
+                name: student.name,
+                email: student.email,
+                role: student.role,
+                isBlocked: student.isBlocked
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Delete student (Admin)
+// @route   DELETE /api/auth/students/:id
+// @access  Private/Admin
+exports.deleteStudent = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        if (user.role === 'admin') {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete administrator accounts'
+            });
+        }
+
+        await User.findByIdAndDelete(id);
+
+        // Delete associated test results
+        const Result = require('../models/Result');
+        await Result.deleteMany({ student: id });
+
+        res.status(200).json({
+            success: true,
+            message: 'Student and related exam records deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+};
