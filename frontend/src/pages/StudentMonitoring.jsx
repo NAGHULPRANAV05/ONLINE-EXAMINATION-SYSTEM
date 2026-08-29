@@ -351,11 +351,19 @@ function StudentMonitoring() {
                                                 <span className="sm-mon-perf-name-icon"><FaBookOpen /></span>
                                                 {subject.subjectName}
                                             </div>
-                                            <div className="sm-mon-score-simple">
-                                                <span className="sm-mon-score-lbl">Average Score</span>
-                                                <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
-                                                    {subject.avgScore.toFixed(1)}%
-                                                </span>
+                                            <div className="sm-mon-score-bar-wrap">
+                                                <div className="sm-mon-score-label">
+                                                    <span>Average Score</span>
+                                                    <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
+                                                        {subject.avgScore.toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                                <div className="sm-mon-score-track">
+                                                    <div
+                                                        className={`sm-mon-score-fill ${getScoreClass(subject.avgScore)}`}
+                                                        style={{ width: `${Math.min(subject.avgScore, 100)}%` }}
+                                                    />
+                                                </div>
                                             </div>
                                             <div className="sm-mon-perf-meta">
                                                 <span>Attempts</span>
@@ -447,7 +455,6 @@ function StudentMonitoring() {
                                         <th>Exams Taken</th>
                                         <th>Pass / Fail</th>
                                         <th>Average Score</th>
-                                        <th>Best Score</th>
                                         <th>Latest Attempt</th>
                                         <th style={{ textAlign: 'right' }}>Actions</th>
                                     </tr>
@@ -455,7 +462,7 @@ function StudentMonitoring() {
                                 <tbody>
                                     {filteredStudents.length === 0 ? (
                                         <tr>
-                                            <td colSpan="8" className="sm-mon-empty-row">
+                                            <td colSpan="7" className="sm-mon-empty-row">
                                                 {groupedStudents.length === 0
                                                     ? "No registered students found. Click '+ Add Student' to create an account."
                                                     : "No students matching your search criteria."}
@@ -527,17 +534,6 @@ function StudentMonitoring() {
                                                             <span className="sm-muted-text">-</span>
                                                         )}
                                                     </div>
-                                                </td>
-
-                                                <td>
-                                                    {student.examsCount > 0 ? (
-                                                        <span className="sm-best-score">
-                                                            <FaTrophy style={{ color: '#f59e0b', marginRight: 4 }} />
-                                                            {student.bestPercentage.toFixed(1)}%
-                                                        </span>
-                                                    ) : (
-                                                        <span className="sm-muted-text">-</span>
-                                                    )}
                                                 </td>
 
                                                 <td>
@@ -805,9 +801,17 @@ function StudentMonitoring() {
                                                     </td>
 
                                                     <td>
-                                                        <span className={`sm-mon-pct ${getScoreClass(result.percentage)}`}>
-                                                            {(result.percentage || 0).toFixed(1)}%
-                                                        </span>
+                                                        <div className="sm-score-bar-inline">
+                                                            <div className="sm-score-track sm">
+                                                                <div
+                                                                    className={`sm-mon-score-fill ${getScoreClass(result.percentage)}`}
+                                                                    style={{ width: `${Math.min(result.percentage || 0, 100)}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className={`sm-mon-pct ${getScoreClass(result.percentage)}`}>
+                                                                {(result.percentage || 0).toFixed(1)}%
+                                                            </span>
+                                                        </div>
                                                     </td>
 
                                                     <td>
