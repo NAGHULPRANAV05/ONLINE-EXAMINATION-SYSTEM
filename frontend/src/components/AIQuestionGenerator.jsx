@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { FaRobot, FaSyncAlt, FaMagic, FaCheckCircle, FaCheck } from 'react-icons/fa';
 import { questionAPI } from '../services/api';
 
-function AIQuestionGenerator({ subjects, onQuestionsGenerated, onClose }) {
+function AIQuestionGenerator({ subjects, defaultSubjectId, onQuestionsGenerated, onClose }) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         type: 'mcq',
         topic: '',
-        subject: '',
+        subject: defaultSubjectId || '',
         difficulty: 'medium',
         count: 5,
         language: 'any'
