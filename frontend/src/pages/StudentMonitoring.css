@@ -772,7 +772,7 @@
 .profile-card-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
 }
 
@@ -817,28 +817,73 @@
   color: #2563eb;
 }
 
-.btn-profile-block {
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.btn-profile-key,
+.btn-profile-block,
+.btn-profile-delete {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
-  padding: 0.45rem 0.95rem;
+  padding: 0.4rem 0.75rem;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
+  height: 34px;
+}
+
+.btn-profile-key {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+
+.btn-profile-key:hover {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
 }
 
 .btn-profile-block.block {
-  background: #fef2f2;
+  background: #ffffff;
   border: 1px solid #fecaca;
   color: #dc2626;
 }
 
+.btn-profile-block.block:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
 .btn-profile-block.unblock {
-  background: #ecfdf5;
+  background: #ffffff;
   border: 1px solid #a7f3d0;
   color: #059669;
+}
+
+.btn-profile-block.unblock:hover {
+  background: #ecfdf5;
+  border-color: #059669;
+}
+
+.btn-profile-delete {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.btn-profile-delete:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
 }
 
 /* Detail Controls */

@@ -689,16 +689,27 @@ function StudentMonitoring() {
                                 <div className="profile-actions">
                                     <button
                                         type="button"
+                                        className="btn-profile-key"
+                                        onClick={() => handleOpenPasswordModal(selectedStudent)}
+                                        title={`Change ${selectedStudent.name}'s login password`}
+                                    >
+                                        <FaKey />
+                                        <span>Change Password</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
                                         className={`btn-profile-block ${selectedStudent.isBlocked ? 'unblock' : 'block'}`}
                                         onClick={() => handleToggleBlock(selectedStudent.id, selectedStudent.isBlocked, selectedStudent.name)}
+                                        title={selectedStudent.isBlocked ? "Allow student to log in" : "Block student from logging in"}
                                     >
                                         {selectedStudent.isBlocked ? (
                                             <>
-                                                <FaCheck /> Unblock Access
+                                                <FaCheck /> <span>Unblock Access</span>
                                             </>
                                         ) : (
                                             <>
-                                                <FaBan /> Block Access
+                                                <FaBan /> <span>Block Access</span>
                                             </>
                                         )}
                                     </button>
@@ -707,9 +718,10 @@ function StudentMonitoring() {
                                         type="button"
                                         className="btn-profile-delete"
                                         onClick={() => handleDeleteStudent(selectedStudent.id, selectedStudent.name)}
-                                        title={`Delete ${selectedStudent.name}`}
+                                        title={`Delete ${selectedStudent.name}'s account`}
                                     >
-                                        <FaTrash /> Delete Student
+                                        <FaTrash />
+                                        <span>Delete Student</span>
                                     </button>
                                 </div>
                             </div>
