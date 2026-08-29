@@ -277,46 +277,20 @@
   font-size: 0.85rem;
 }
 
-.sm-mon-score-bar-wrap {
-  margin-bottom: 0.75rem;
-}
-
-.sm-mon-score-label {
+.sm-mon-score-simple {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.75rem;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  padding: 0.45rem 0.65rem;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.sm-mon-score-lbl {
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--text-muted, #64748b);
-  margin-bottom: 0.35rem;
-}
-
-.sm-mon-score-track {
-  height: 6px;
-  background: #f1f5f9;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.sm-mon-score-track.sm {
-  width: 70px;
-}
-
-.sm-mon-score-fill {
-  height: 100%;
-  border-radius: 9999px;
-  transition: width 0.4s ease;
-}
-
-.sm-mon-score-fill.high {
-  background: #10b981;
-}
-
-.sm-mon-score-fill.medium {
-  background: #f59e0b;
-}
-
-.sm-mon-score-fill.low {
-  background: #ef4444;
 }
 
 .sm-mon-perf-meta {

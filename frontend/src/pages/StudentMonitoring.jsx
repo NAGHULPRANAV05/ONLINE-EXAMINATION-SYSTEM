@@ -351,19 +351,11 @@ function StudentMonitoring() {
                                                 <span className="sm-mon-perf-name-icon"><FaBookOpen /></span>
                                                 {subject.subjectName}
                                             </div>
-                                            <div className="sm-mon-score-bar-wrap">
-                                                <div className="sm-mon-score-label">
-                                                    <span>Average Score</span>
-                                                    <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
-                                                        {subject.avgScore.toFixed(1)}%
-                                                    </span>
-                                                </div>
-                                                <div className="sm-mon-score-track">
-                                                    <div
-                                                        className={`sm-mon-score-fill ${getScoreClass(subject.avgScore)}`}
-                                                        style={{ width: `${Math.min(subject.avgScore, 100)}%` }}
-                                                    />
-                                                </div>
+                                            <div className="sm-mon-score-simple">
+                                                <span className="sm-mon-score-lbl">Average Score</span>
+                                                <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
+                                                    {subject.avgScore.toFixed(1)}%
+                                                </span>
                                             </div>
                                             <div className="sm-mon-perf-meta">
                                                 <span>Attempts</span>
@@ -689,27 +681,16 @@ function StudentMonitoring() {
                                 <div className="profile-actions">
                                     <button
                                         type="button"
-                                        className="btn-profile-key"
-                                        onClick={() => handleOpenPasswordModal(selectedStudent)}
-                                        title={`Change ${selectedStudent.name}'s login password`}
-                                    >
-                                        <FaKey />
-                                        <span>Change Password</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
                                         className={`btn-profile-block ${selectedStudent.isBlocked ? 'unblock' : 'block'}`}
                                         onClick={() => handleToggleBlock(selectedStudent.id, selectedStudent.isBlocked, selectedStudent.name)}
-                                        title={selectedStudent.isBlocked ? "Allow student to log in" : "Block student from logging in"}
                                     >
                                         {selectedStudent.isBlocked ? (
                                             <>
-                                                <FaCheck /> <span>Unblock Access</span>
+                                                <FaCheck /> Unblock Access
                                             </>
                                         ) : (
                                             <>
-                                                <FaBan /> <span>Block Access</span>
+                                                <FaBan /> Block Access
                                             </>
                                         )}
                                     </button>
@@ -718,10 +699,9 @@ function StudentMonitoring() {
                                         type="button"
                                         className="btn-profile-delete"
                                         onClick={() => handleDeleteStudent(selectedStudent.id, selectedStudent.name)}
-                                        title={`Delete ${selectedStudent.name}'s account`}
+                                        title={`Delete ${selectedStudent.name}`}
                                     >
-                                        <FaTrash />
-                                        <span>Delete Student</span>
+                                        <FaTrash /> Delete Student
                                     </button>
                                 </div>
                             </div>
@@ -825,17 +805,9 @@ function StudentMonitoring() {
                                                     </td>
 
                                                     <td>
-                                                        <div className="sm-score-bar-inline">
-                                                            <div className="sm-score-track sm">
-                                                                <div
-                                                                    className={`sm-mon-score-fill ${getScoreClass(result.percentage)}`}
-                                                                    style={{ width: `${Math.min(result.percentage || 0, 100)}%` }}
-                                                                />
-                                                            </div>
-                                                            <span className={`sm-mon-pct ${getScoreClass(result.percentage)}`}>
-                                                                {(result.percentage || 0).toFixed(1)}%
-                                                            </span>
-                                                        </div>
+                                                        <span className={`sm-mon-pct ${getScoreClass(result.percentage)}`}>
+                                                            {(result.percentage || 0).toFixed(1)}%
+                                                        </span>
                                                     </td>
 
                                                     <td>
