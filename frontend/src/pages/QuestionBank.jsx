@@ -6,7 +6,7 @@ import { subjectAPI, questionAPI } from '../services/api';
 import {
     FaRobot, FaPlus, FaTrashAlt, FaTimes, FaQuestionCircle,
     FaCode, FaListUl, FaBookOpen, FaStar, FaCheckCircle, FaSearch,
-    FaArrowLeft, FaChevronRight, FaFilter
+    FaArrowLeft, FaChevronRight, FaFilter, FaLayerGroup
 } from 'react-icons/fa';
 import './QuestionBank.css';
 
@@ -159,103 +159,103 @@ function QuestionBank() {
 
     if (loading) return <LoadingSpinner />;
 
+    const totalMCQs = questions.filter(q => q.type === 'mcq').length;
+    const totalCoding = questions.filter(q => q.type === 'coding').length;
+
     return (
-        <div className="qb-page-simple">
+        <div className="qb-page">
             <Navbar />
 
-            {/* Simple Clean Top Header */}
-            <div className="qb-header-bar">
-                <div className="qb-container">
-                    <div className="qb-header-flex">
-                        <div>
-                            {selectedSubject ? (
-                                <div className="qb-nav-breadcrumb">
-                                    <button
-                                        type="button"
-                                        className="btn-back-link"
-                                        onClick={() => {
-                                            setSelectedSubjectId(null);
-                                            setQuestionSearch('');
-                                            setTypeFilter('all');
-                                            setDiffFilter('all');
-                                        }}
-                                    >
-                                        <FaArrowLeft /> All Subjects
-                                    </button>
-                                    <span className="breadcrumb-sep">/</span>
-                                    <span className="breadcrumb-current">{selectedSubject.name}</span>
-                                </div>
-                            ) : (
-                                <>
-                                    <h1 className="qb-title">Question Bank</h1>
-                                    <p className="qb-subtitle">Select a subject to view and manage its question repository</p>
-                                </>
-                            )}
+            {/* Standard Hero Banner */}
+            <div className="qb-hero">
+                <div className="qb-hero-content">
+                    <div className="qb-hero-left">
+                        <div className="qb-hero-icon">
+                            <FaQuestionCircle />
                         </div>
+                        <h1>
+                            {selectedSubject
+                                ? `${selectedSubject.name} — Question Bank`
+                                : 'Question Bank'}
+                        </h1>
+                        <p className="qb-hero-sub">
+                            {selectedSubject
+                                ? `Manage, add, and generate questions specifically for ${selectedSubject.name}`
+                                : 'Organized repository of questions categorized by subject for examination creation'}
+                        </p>
+                        <div className="qb-hero-stats">
+                            <span className="qb-hero-pill"><FaLayerGroup /> {subjects.length} Subjects</span>
+                            <span className="qb-hero-pill"><FaQuestionCircle /> {questions.length} Questions</span>
+                            <span className="qb-hero-pill"><FaListUl /> {totalMCQs} MCQs</span>
+                            <span className="qb-hero-pill"><FaCode /> {totalCoding} Coding</span>
+                        </div>
+                    </div>
 
-                        <div className="qb-header-actions">
-                            <button
-                                type="button"
-                                className="btn-simple-ai"
-                                onClick={() => setShowAIGenerator(true)}
-                            >
-                                <FaRobot /> Generate with AI
-                            </button>
-                            <button
-                                type="button"
-                                className="btn-simple-add"
-                                onClick={() => handleOpenAddModal(selectedSubjectId)}
-                            >
-                                <FaPlus /> Add Question
-                            </button>
-                        </div>
+                    <div className="qb-hero-btns">
+                        <button
+                            type="button"
+                            className="qb-hero-btn ai"
+                            onClick={() => setShowAIGenerator(true)}
+                        >
+                            <FaRobot /> Generate with AI
+                        </button>
+                        <button
+                            type="button"
+                            className="qb-hero-btn add"
+                            onClick={() => handleOpenAddModal(selectedSubjectId)}
+                        >
+                            <FaPlus /> Add Question
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="qb-container qb-body-wrap">
+            {/* Content Section */}
+            <div className="qb-content">
 
                 {/* ════════════════════════════════════════════════════════════════════════
-                    VIEW 1: SIMPLE SUBJECT DIRECTORY (Default)
+                    VIEW 1: SUBJECT DIRECTORY (Select Subject)
                    ════════════════════════════════════════════════════════════════════════ */}
                 {!selectedSubject && (
                     <>
-                        {/* Search and Summary Row */}
-                        <div className="qb-toolbar-row">
-                            <div className="qb-search-input-wrap">
+                        <div className="qb-section-head-split">
+                            <div className="qb-section-head">
+                                <div className="qb-section-icon"><FaBookOpen /></div>
+                                <div>
+                                    <h2 className="qb-section-title">Select Subject</h2>
+                                    <p className="qb-section-subtitle">Choose a subject to manage its question repository</p>
+                                </div>
+                            </div>
+
+                            <div className="qb-search-box">
                                 <FaSearch className="search-icon" />
                                 <input
                                     type="text"
-                                    placeholder="Search subject by name..."
+                                    placeholder="Search subject by name or code..."
                                     value={subjectSearch}
                                     onChange={(e) => setSubjectSearch(e.target.value)}
                                 />
                                 {subjectSearch && (
                                     <button
                                         type="button"
-                                        className="btn-clear-x"
+                                        className="btn-clear-search"
                                         onClick={() => setSubjectSearch('')}
                                     >
                                         ×
                                     </button>
                                 )}
                             </div>
-
-                            <span className="qb-count-label">
-                                {subjects.length} Subjects • {questions.length} Total Questions
-                            </span>
                         </div>
 
                         {/* Subject Cards Grid */}
                         {filteredSubjects.length === 0 ? (
-                            <div className="qb-empty-box">
-                                <FaQuestionCircle className="empty-icon" />
+                            <div className="qb-empty-card">
+                                <div className="qb-empty-icon"><FaBookOpen /></div>
                                 <h3>No subjects found</h3>
-                                <p>Create subjects in Subject Management to start adding questions.</p>
+                                <p>Create subjects in Subject Management first to organize your questions.</p>
                             </div>
                         ) : (
-                            <div className="qb-card-grid">
+                            <div className="qb-subject-grid">
                                 {filteredSubjects.map((subject) => {
                                     const stats = subjectStatsMap[subject._id] || { total: 0, mcq: 0, coding: 0 };
                                     const isCode = subject.type === 'coding' || subject.language;
@@ -263,41 +263,50 @@ function QuestionBank() {
                                     return (
                                         <div
                                             key={subject._id}
-                                            className="qb-item-card"
+                                            className="qb-subject-card"
                                             onClick={() => setSelectedSubjectId(subject._id)}
                                         >
-                                            <div className="qb-card-header">
-                                                <div className={`qb-card-icon ${isCode ? 'code' : 'mcq'}`}>
+                                            <div className="qb-subject-card-top">
+                                                <div className={`qb-subject-icon ${isCode ? 'code' : 'apt'}`}>
                                                     {isCode ? <FaCode /> : <FaBookOpen />}
                                                 </div>
-                                                <span className="qb-card-tag">
+                                                <span className={`qb-type-tag ${isCode ? 'coding' : 'mcq'}`}>
                                                     {subject.language ? subject.language.toUpperCase() : (subject.type || 'MCQ').toUpperCase()}
                                                 </span>
                                             </div>
 
-                                            <div className="qb-card-info">
-                                                <h3 className="qb-card-title">{subject.name}</h3>
-                                                <p className="qb-card-desc">
-                                                    {subject.description || 'Subject question repository.'}
+                                            <div className="qb-subject-card-body">
+                                                <h3 className="qb-subject-name">{subject.name}</h3>
+                                                {subject.code && <span className="qb-subject-code">{subject.code}</span>}
+                                                <p className="qb-subject-desc">
+                                                    {subject.description || 'Subject question bank and assessment items.'}
                                                 </p>
                                             </div>
 
-                                            <div className="qb-card-stats-row">
-                                                <span className="qb-stat-pill total">
-                                                    {stats.total} Questions
+                                            <div className="qb-subject-stats-bar">
+                                                <span className="stat-chip total">
+                                                    <FaQuestionCircle /> {stats.total} Questions
                                                 </span>
-                                                <span className="qb-stat-pill sub">
-                                                    {stats.mcq} MCQ
+                                                <span className="stat-chip">
+                                                    <FaListUl /> {stats.mcq} MCQ
                                                 </span>
-                                                <span className="qb-stat-pill sub">
-                                                    {stats.coding} Coding
+                                                <span className="stat-chip">
+                                                    <FaCode /> {stats.coding} Code
                                                 </span>
                                             </div>
 
-                                            <div className="qb-card-bottom">
-                                                <span className="qb-enter-text">
-                                                    Open Questions <FaChevronRight className="enter-arrow" />
-                                                </span>
+                                            <div className="qb-subject-card-footer">
+                                                <button
+                                                    type="button"
+                                                    className="btn-open-qb"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedSubjectId(subject._id);
+                                                    }}
+                                                >
+                                                    <span>Open Question Bank</span>
+                                                    <FaChevronRight className="btn-arrow" />
+                                                </button>
                                             </div>
                                         </div>
                                     );
@@ -308,69 +317,121 @@ function QuestionBank() {
                 )}
 
                 {/* ════════════════════════════════════════════════════════════════════════
-                    VIEW 2: INSIDE SUBJECT QUESTIONS (Clean & Simple)
+                    VIEW 2: INSIDE SUBJECT QUESTIONS
                    ════════════════════════════════════════════════════════════════════════ */}
                 {selectedSubject && (
-                    <div className="qb-detail-container">
+                    <div className="qb-detail-view">
 
-                        {/* Subject Top Banner */}
-                        <div className="qb-subject-banner">
-                            <div className="banner-left">
-                                <h2>{selectedSubject.name}</h2>
-                                <p>{selectedSubject.description || 'Subject questions collection'}</p>
+                        {/* Top Back Navigation Bar */}
+                        <div className="qb-detail-nav-bar">
+                            <button
+                                type="button"
+                                className="btn-back-to-subjects"
+                                onClick={() => {
+                                    setSelectedSubjectId(null);
+                                    setQuestionSearch('');
+                                    setTypeFilter('all');
+                                    setDiffFilter('all');
+                                }}
+                            >
+                                <FaArrowLeft />
+                                <span>Back to All Subjects</span>
+                            </button>
+
+                            <div className="qb-breadcrumb">
+                                <span>Question Bank</span>
+                                <span className="sep">/</span>
+                                <span className="current">{selectedSubject.name}</span>
+                            </div>
+                        </div>
+
+                        {/* Subject Header Card */}
+                        <div className="qb-subject-header-card">
+                            <div className="qb-header-left">
+                                <div className={`qb-header-avatar ${selectedSubject.language ? 'code' : 'apt'}`}>
+                                    {selectedSubject.language ? <FaCode /> : <FaBookOpen />}
+                                </div>
+                                <div>
+                                    <div className="qb-title-row">
+                                        <h2>{selectedSubject.name}</h2>
+                                        <span className={`qb-type-tag ${selectedSubject.language ? 'coding' : 'mcq'}`}>
+                                            {selectedSubject.language ? selectedSubject.language.toUpperCase() : (selectedSubject.type || 'MCQ').toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <p className="qb-header-desc">
+                                        {selectedSubject.description || 'Subject question repository for student exams.'}
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="banner-right">
-                                <div className="banner-stats">
-                                    <div className="b-stat">
-                                        <span className="b-num">{subjectStatsMap[selectedSubject._id]?.total || 0}</span>
-                                        <span className="b-lbl">Total</span>
+                            <div className="qb-header-right">
+                                <div className="qb-metrics-row">
+                                    <div className="metric-box">
+                                        <span className="metric-val">{subjectStatsMap[selectedSubject._id]?.total || 0}</span>
+                                        <span className="metric-lbl">Total</span>
                                     </div>
-                                    <div className="b-stat">
-                                        <span className="b-num">{subjectStatsMap[selectedSubject._id]?.mcq || 0}</span>
-                                        <span className="b-lbl">MCQs</span>
+                                    <div className="metric-box mcq">
+                                        <span className="metric-val">{subjectStatsMap[selectedSubject._id]?.mcq || 0}</span>
+                                        <span className="metric-lbl">MCQs</span>
                                     </div>
-                                    <div className="b-stat">
-                                        <span className="b-num">{subjectStatsMap[selectedSubject._id]?.coding || 0}</span>
-                                        <span className="b-lbl">Coding</span>
+                                    <div className="metric-box code">
+                                        <span className="metric-val">{subjectStatsMap[selectedSubject._id]?.coding || 0}</span>
+                                        <span className="metric-lbl">Coding</span>
                                     </div>
+                                </div>
+
+                                <div className="qb-header-btns">
+                                    <button
+                                        type="button"
+                                        className="btn-header-add"
+                                        onClick={() => handleOpenAddModal(selectedSubject._id)}
+                                    >
+                                        <FaPlus /> Add Question
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn-header-ai"
+                                        onClick={() => setShowAIGenerator(true)}
+                                    >
+                                        <FaRobot /> AI Generate
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Filter and Search Bar */}
-                        <div className="qb-filter-bar">
-                            <div className="filter-group">
+                        {/* Filter and Search Controls */}
+                        <div className="qb-controls-row">
+                            <div className="qb-filter-pills">
                                 <button
                                     type="button"
-                                    className={`btn-filter ${typeFilter === 'all' ? 'active' : ''}`}
+                                    className={`filter-pill ${typeFilter === 'all' ? 'active' : ''}`}
                                     onClick={() => setTypeFilter('all')}
                                 >
                                     All ({subjectStatsMap[selectedSubject._id]?.total || 0})
                                 </button>
                                 <button
                                     type="button"
-                                    className={`btn-filter ${typeFilter === 'mcq' ? 'active' : ''}`}
+                                    className={`filter-pill ${typeFilter === 'mcq' ? 'active' : ''}`}
                                     onClick={() => setTypeFilter('mcq')}
                                 >
-                                    MCQ ({subjectStatsMap[selectedSubject._id]?.mcq || 0})
+                                    MCQs ({subjectStatsMap[selectedSubject._id]?.mcq || 0})
                                 </button>
                                 <button
                                     type="button"
-                                    className={`btn-filter ${typeFilter === 'coding' ? 'active' : ''}`}
+                                    className={`filter-pill ${typeFilter === 'coding' ? 'active' : ''}`}
                                     onClick={() => setTypeFilter('coding')}
                                 >
                                     Coding ({subjectStatsMap[selectedSubject._id]?.coding || 0})
                                 </button>
                             </div>
 
-                            <div className="filter-right">
-                                <div className="select-wrap">
-                                    <FaFilter className="sel-icon" />
+                            <div className="qb-controls-right">
+                                <div className="qb-diff-select-box">
+                                    <FaFilter className="filter-icon" />
                                     <select
                                         value={diffFilter}
                                         onChange={(e) => setDiffFilter(e.target.value)}
-                                        className="simple-select"
+                                        className="diff-select"
                                     >
                                         <option value="all">All Difficulties</option>
                                         <option value="easy">Easy</option>
@@ -379,18 +440,18 @@ function QuestionBank() {
                                     </select>
                                 </div>
 
-                                <div className="search-wrap-sm">
+                                <div className="qb-question-search">
                                     <FaSearch className="search-icon" />
                                     <input
                                         type="text"
-                                        placeholder="Search questions..."
+                                        placeholder={`Search in ${selectedSubject.name}...`}
                                         value={questionSearch}
                                         onChange={(e) => setQuestionSearch(e.target.value)}
                                     />
                                     {questionSearch && (
                                         <button
                                             type="button"
-                                            className="btn-clear-x"
+                                            className="btn-clear-search"
                                             onClick={() => setQuestionSearch('')}
                                         >
                                             ×
@@ -400,23 +461,27 @@ function QuestionBank() {
                             </div>
                         </div>
 
-                        {/* Question Cards Grid */}
+                        {/* Questions Cards Grid */}
                         {subjectQuestions.length === 0 ? (
-                            <div className="qb-empty-box">
-                                <FaQuestionCircle className="empty-icon" />
+                            <div className="qb-empty-card">
+                                <div className="qb-empty-icon"><FaQuestionCircle /></div>
                                 <h3>No questions found in {selectedSubject.name}</h3>
-                                <p>Click "Add Question" to create your first question or "Generate with AI".</p>
-                                <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                                <p>
+                                    {questionSearch || typeFilter !== 'all' || diffFilter !== 'all'
+                                        ? 'No questions matched your filter criteria.'
+                                        : `Start adding questions for ${selectedSubject.name} or generate with AI.`}
+                                </p>
+                                <div style={{ marginTop: '1rem', display: 'flex', gap: '0.65rem', justifyContent: 'center' }}>
                                     <button
                                         type="button"
-                                        className="btn-simple-add"
+                                        className="btn-header-add"
                                         onClick={() => handleOpenAddModal(selectedSubject._id)}
                                     >
                                         <FaPlus /> Add Question
                                     </button>
                                     <button
                                         type="button"
-                                        className="btn-simple-ai"
+                                        className="btn-header-ai"
                                         onClick={() => setShowAIGenerator(true)}
                                     >
                                         <FaRobot /> Generate with AI
@@ -429,17 +494,17 @@ function QuestionBank() {
                                     <div key={question._id} className="qb-q-card">
                                         <div className="qb-q-card-top">
                                             <div className="q-badge-row">
-                                                <span className="q-index-pill">Q{idx + 1}</span>
-                                                <span className={`q-type-tag ${question.type}`}>
+                                                <span className="q-num-badge">Q{idx + 1}</span>
+                                                <span className={`qb-badge ${question.type}`}>
                                                     {question.type === 'mcq' ? <FaListUl /> : <FaCode />}
                                                     {question.type.toUpperCase()}
                                                 </span>
-                                                <span className={`q-diff-tag ${question.difficulty}`}>
+                                                <span className={`qb-badge ${question.difficulty}`}>
                                                     {question.difficulty}
                                                 </span>
                                             </div>
-                                            <span className="q-marks-pill">
-                                                <FaStar /> {question.marks} {question.marks === 1 ? 'Mark' : 'Marks'}
+                                            <span className="qb-badge marks">
+                                                <FaStar /> {question.marks} marks
                                             </span>
                                         </div>
 
@@ -449,16 +514,16 @@ function QuestionBank() {
 
                                         {/* MCQ options preview */}
                                         {question.type === 'mcq' && question.options && (
-                                            <div className="qb-q-options">
+                                            <div className="qb-mcq-options-list">
                                                 {question.options.map((opt, i) => {
                                                     const letter = String.fromCharCode(65 + i);
                                                     const isCorrect = question.correctAnswer === letter;
                                                     return (
-                                                        <div key={i} className={`qb-q-opt-row ${isCorrect ? 'correct' : ''}`}>
-                                                            <span className="opt-letter">{letter}</span>
+                                                        <div key={i} className={`qb-mcq-opt-item ${isCorrect ? 'correct' : ''}`}>
+                                                            <span className="opt-letter-bullet">{letter}</span>
                                                             <span className="opt-text">{opt}</span>
                                                             {isCorrect && (
-                                                                <span className="opt-correct-chip">Correct</span>
+                                                                <FaCheckCircle style={{ color: '#059669', fontSize: '0.75rem', marginLeft: 'auto', flexShrink: 0 }} />
                                                             )}
                                                         </div>
                                                     );
@@ -466,18 +531,21 @@ function QuestionBank() {
                                             </div>
                                         )}
 
-                                        {/* Coding test cases preview */}
+                                        {/* Coding preview */}
                                         {question.type === 'coding' && question.testCases && (
-                                            <div className="qb-q-code-summary">
+                                            <div className="qb-code-info">
                                                 <FaCode /> {question.testCases.length} test case{question.testCases.length !== 1 ? 's' : ''} configured
                                             </div>
                                         )}
 
                                         <div className="qb-q-footer">
-                                            <span className="q-footer-subj">{selectedSubject.name}</span>
+                                            <span className="q-footer-subject">
+                                                <FaBookOpen style={{ marginRight: 4 }} />
+                                                {selectedSubject.name}
+                                            </span>
                                             <button
                                                 type="button"
-                                                className="btn-q-delete"
+                                                className="btn-delete-q"
                                                 onClick={() => handleDelete(question._id)}
                                                 title="Delete question"
                                             >
@@ -495,7 +563,7 @@ function QuestionBank() {
             {/* Add Question Modal */}
             {showModal && (
                 <div className="qb-modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="qb-modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="qb-modal-container" onClick={(e) => e.stopPropagation()}>
                         <div className="qb-modal-header">
                             <div>
                                 <h2 className="modal-title">Add New Question</h2>
@@ -514,25 +582,25 @@ function QuestionBank() {
 
                         <div className="qb-modal-body">
                             <form onSubmit={handleSubmit}>
-                                {/* Type selector */}
-                                <div className="modal-type-row">
+                                {/* Type Selector */}
+                                <div className="modal-type-tabs">
                                     <button
                                         type="button"
-                                        className={`btn-type-tab ${formData.type === 'mcq' ? 'active' : ''}`}
+                                        className={`btn-type-option ${formData.type === 'mcq' ? 'active' : ''}`}
                                         onClick={() => setFormData({ ...formData, type: 'mcq' })}
                                     >
                                         <FaListUl /> Multiple Choice (MCQ)
                                     </button>
                                     <button
                                         type="button"
-                                        className={`btn-type-tab ${formData.type === 'coding' ? 'active' : ''}`}
+                                        className={`btn-type-option ${formData.type === 'coding' ? 'active' : ''}`}
                                         onClick={() => setFormData({ ...formData, type: 'coding' })}
                                     >
                                         <FaCode /> Coding Problem
                                     </button>
                                 </div>
 
-                                <div className="modal-form-grid">
+                                <div className="modal-form-grid3">
                                     <div className="form-group">
                                         <label className="form-lbl">Subject</label>
                                         <select
@@ -578,7 +646,7 @@ function QuestionBank() {
                                     <label className="form-lbl">Question Statement</label>
                                     <textarea
                                         className="form-control textarea"
-                                        placeholder="Enter the question or problem statement..."
+                                        placeholder="Enter the problem statement or question text..."
                                         value={formData.questionText}
                                         onChange={(e) => setFormData({ ...formData, questionText: e.target.value })}
                                         required
@@ -587,11 +655,11 @@ function QuestionBank() {
                                 </div>
 
                                 {formData.type === 'mcq' ? (
-                                    <div className="mcq-options-container">
-                                        <label className="form-lbl">Options & Correct Answer</label>
+                                    <div className="mcq-section">
+                                        <label className="form-lbl">Options</label>
                                         <div className="mcq-options-grid">
                                             {formData.options.map((opt, i) => (
-                                                <div key={i} className="mcq-opt-input-row">
+                                                <div key={i} className="mcq-input-wrap">
                                                     <span className="opt-badge">{String.fromCharCode(65 + i)}</span>
                                                     <input
                                                         type="text"
@@ -610,14 +678,14 @@ function QuestionBank() {
                                         </div>
 
                                         <div className="form-group" style={{ marginTop: '0.75rem' }}>
-                                            <label className="form-lbl">Select Correct Option</label>
+                                            <label className="form-lbl">Correct Option</label>
                                             <select
                                                 className="form-control"
                                                 value={formData.correctAnswer}
                                                 onChange={(e) => setFormData({ ...formData, correctAnswer: e.target.value })}
                                                 required
                                             >
-                                                <option value="">Choose Correct Option</option>
+                                                <option value="">Select Correct Option</option>
                                                 <option value="A">Option A</option>
                                                 <option value="B">Option B</option>
                                                 <option value="C">Option C</option>
@@ -626,8 +694,8 @@ function QuestionBank() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="coding-cases-container">
-                                        <label className="form-lbl">Test Cases</label>
+                                    <div className="coding-section">
+                                        <label className="form-lbl">Sample Test Cases</label>
                                         {formData.testCases.map((tc, i) => (
                                             <div key={i} className="tc-box">
                                                 <div className="tc-header">
@@ -635,7 +703,7 @@ function QuestionBank() {
                                                     {formData.testCases.length > 1 && (
                                                         <button
                                                             type="button"
-                                                            className="btn-tc-remove"
+                                                            className="btn-del-tc"
                                                             onClick={() => {
                                                                 const filtered = formData.testCases.filter((_, idx) => idx !== i);
                                                                 setFormData({ ...formData, testCases: filtered });
@@ -646,8 +714,8 @@ function QuestionBank() {
                                                     )}
                                                 </div>
                                                 <div className="tc-grid">
-                                                    <div className="form-group">
-                                                        <label className="form-lbl-sub">Standard Input (stdin)</label>
+                                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                                        <label className="form-lbl-sub">Input (stdin)</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -660,7 +728,7 @@ function QuestionBank() {
                                                             }}
                                                         />
                                                     </div>
-                                                    <div className="form-group">
+                                                    <div className="form-group" style={{ marginBottom: 0 }}>
                                                         <label className="form-lbl-sub">Expected Output</label>
                                                         <input
                                                             type="text"
@@ -689,11 +757,11 @@ function QuestionBank() {
                                     </div>
                                 )}
 
-                                <div className="modal-actions-row">
+                                <div className="modal-actions">
                                     <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
                                         Cancel
                                     </button>
-                                    <button type="submit" className="btn-save">
+                                    <button type="submit" className="btn-submit">
                                         Save Question
                                     </button>
                                 </div>
