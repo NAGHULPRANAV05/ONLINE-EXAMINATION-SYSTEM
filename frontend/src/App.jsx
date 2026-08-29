@@ -39,7 +39,7 @@ function App() {
             <Route
                 path="/student/result/:resultId"
                 element={
-                    <ProtectedRoute role="student">
+                    <ProtectedRoute>
                         <ResultView />
                     </ProtectedRoute>
                 }
