@@ -409,11 +409,19 @@ function StudentMonitoring() {
                                                 <span className="sm-mon-perf-name-icon"><FaBookOpen /></span>
                                                 {subject.subjectName}
                                             </div>
-                                            <div className="sm-mon-score-simple">
-                                                <span className="sm-mon-score-lbl">Average Score</span>
-                                                <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
-                                                    {subject.avgScore.toFixed(1)}%
-                                                </span>
+                                            <div className="sm-mon-score-bar-wrap">
+                                                <div className="sm-mon-score-label">
+                                                    <span>Average Score</span>
+                                                    <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
+                                                        {subject.avgScore.toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                                <div className="sm-mon-score-track">
+                                                    <div
+                                                        className={`sm-mon-score-fill ${getScoreClass(subject.avgScore)}`}
+                                                        style={{ width: `${Math.min(subject.avgScore, 100)}%` }}
+                                                    />
+                                                </div>
                                             </div>
                                             <div className="sm-mon-perf-meta">
                                                 <span>Attempts</span>
