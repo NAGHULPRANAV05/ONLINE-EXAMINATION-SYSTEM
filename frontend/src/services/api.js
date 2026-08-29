@@ -46,6 +46,7 @@ export const userAPI = {
     getAllStudents: () => api.get('/auth/students'),
     createStudent: (data) => api.post('/auth/students', data),
     toggleBlockStudent: (id, data) => api.put(`/auth/students/${id}/block`, data),
+    updatePassword: (id, data) => api.put(`/auth/students/${id}/password`, data),
     deleteStudent: (id) => api.delete(`/auth/students/${id}`)
 };
 

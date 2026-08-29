@@ -315,3 +315,49 @@ exports.deleteStudent = async (req, res) => {
         });
     }
 };
+
+// @desc    Update/Change student login password (Admin)
+// @route   PUT /api/auth/students/:id/password
+// @access  Private/Admin
+exports.updateStudentPassword = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { newPassword } = req.body;
+
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide a new password with at least 6 characters'
+            });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        if (user.role === 'admin') {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot modify administrator password through student management'
+            });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Password for ${user.name} has been updated successfully`
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+};

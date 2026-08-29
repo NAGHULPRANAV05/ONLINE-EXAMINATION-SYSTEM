@@ -7,8 +7,8 @@ import {
     FaTrash, FaUsers, FaClipboardCheck, FaCheckCircle,
     FaTimesCircle, FaBookOpen, FaChartBar, FaListAlt,
     FaArrowLeft, FaSearch, FaUserGraduate, FaExternalLinkAlt,
-    FaTrophy, FaCalendarAlt, FaChevronRight, FaBan, FaCheck,
-    FaUserPlus, FaTimes, FaLock, FaEnvelope, FaUser
+    FaCalendarAlt, FaChevronRight, FaBan, FaCheck,
+    FaUserPlus, FaTimes, FaLock, FaEnvelope, FaUser, FaKey
 } from 'react-icons/fa';
 import './StudentMonitoring.css';
 
@@ -33,6 +33,15 @@ function StudentMonitoring() {
     const [newStudentPassword, setNewStudentPassword] = useState('');
     const [isSubmittingStudent, setIsSubmittingStudent] = useState(false);
     const [addStudentError, setAddStudentError] = useState('');
+
+    // Change Password Modal State
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [studentForPassword, setStudentForPassword] = useState(null);
+    const [newPasswordInput, setNewPasswordInput] = useState('');
+    const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+    const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+    const [passwordModalError, setPasswordModalError] = useState('');
+    const [passwordModalSuccess, setPasswordModalSuccess] = useState('');
 
     useEffect(() => {
         fetchData();
@@ -121,6 +130,55 @@ function StudentMonitoring() {
             fetchData();
         } catch (error) {
             alert('Error deleting student: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    // Open change password modal
+    const handleOpenPasswordModal = (student) => {
+        setStudentForPassword(student);
+        setNewPasswordInput('');
+        setConfirmPasswordInput('');
+        setPasswordModalError('');
+        setPasswordModalSuccess('');
+        setIsPasswordModalOpen(true);
+    };
+
+    // Submit password update
+    const handleUpdatePassword = async (e) => {
+        e.preventDefault();
+        setPasswordModalError('');
+        setPasswordModalSuccess('');
+
+        if (!newPasswordInput || !confirmPasswordInput) {
+            setPasswordModalError('Please fill in both password fields.');
+            return;
+        }
+
+        if (newPasswordInput.length < 6) {
+            setPasswordModalError('New password must be at least 6 characters long.');
+            return;
+        }
+
+        if (newPasswordInput !== confirmPasswordInput) {
+            setPasswordModalError('Passwords do not match. Please re-enter.');
+            return;
+        }
+
+        setIsSubmittingPassword(true);
+        try {
+            const res = await userAPI.updatePassword(studentForPassword.id, {
+                newPassword: newPasswordInput
+            });
+
+            setPasswordModalSuccess(res.data?.message || 'Password updated successfully!');
+            setTimeout(() => {
+                setIsPasswordModalOpen(false);
+                setStudentForPassword(null);
+            }, 1200);
+        } catch (error) {
+            setPasswordModalError(error.response?.data?.message || error.message || 'Failed to update password');
+        } finally {
+            setIsSubmittingPassword(false);
         }
     };
 
@@ -285,7 +343,7 @@ function StudentMonitoring() {
                     <p className="sm-mon-hero-sub">
                         {selectedStudent
                             ? `Viewing complete exam records, performance metrics, and access privileges for ${selectedStudent.name}`
-                            : 'Track student performance, assessment results, and manage student accounts and access'}
+                            : 'Track student performance, assessment results, and manage student credentials and access'}
                     </p>
                 </div>
             </div>
@@ -351,19 +409,11 @@ function StudentMonitoring() {
                                                 <span className="sm-mon-perf-name-icon"><FaBookOpen /></span>
                                                 {subject.subjectName}
                                             </div>
-                                            <div className="sm-mon-score-bar-wrap">
-                                                <div className="sm-mon-score-label">
-                                                    <span>Average Score</span>
-                                                    <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
-                                                        {subject.avgScore.toFixed(1)}%
-                                                    </span>
-                                                </div>
-                                                <div className="sm-mon-score-track">
-                                                    <div
-                                                        className={`sm-mon-score-fill ${getScoreClass(subject.avgScore)}`}
-                                                        style={{ width: `${Math.min(subject.avgScore, 100)}%` }}
-                                                    />
-                                                </div>
+                                            <div className="sm-mon-score-simple">
+                                                <span className="sm-mon-score-lbl">Average Score</span>
+                                                <span className={`sm-mon-pct ${getScoreClass(subject.avgScore)}`}>
+                                                    {subject.avgScore.toFixed(1)}%
+                                                </span>
                                             </div>
                                             <div className="sm-mon-perf-meta">
                                                 <span>Attempts</span>
@@ -383,7 +433,7 @@ function StudentMonitoring() {
                                 <div className="sm-mon-section-icon results"><FaUserGraduate /></div>
                                 <div>
                                     <h2 className="sm-mon-section-title">Student Records & Access Control</h2>
-                                    <p className="sm-mon-section-subtitle">Manage student accounts, control login access, and review assessment records</p>
+                                    <p className="sm-mon-section-subtitle">Manage student accounts, change passwords, and control portal login access</p>
                                 </div>
                             </div>
 
@@ -574,6 +624,15 @@ function StudentMonitoring() {
 
                                                         <button
                                                             type="button"
+                                                            className="btn-key-password"
+                                                            onClick={() => handleOpenPasswordModal(student)}
+                                                            title={`Change ${student.name}'s password`}
+                                                        >
+                                                            <FaKey />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
                                                             className="btn-view-results"
                                                             onClick={() => setSelectedStudentId(student.id)}
                                                             title="View student exam results"
@@ -677,16 +736,27 @@ function StudentMonitoring() {
                                 <div className="profile-actions">
                                     <button
                                         type="button"
+                                        className="btn-profile-key"
+                                        onClick={() => handleOpenPasswordModal(selectedStudent)}
+                                        title={`Change ${selectedStudent.name}'s login password`}
+                                    >
+                                        <FaKey />
+                                        <span>Change Password</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
                                         className={`btn-profile-block ${selectedStudent.isBlocked ? 'unblock' : 'block'}`}
                                         onClick={() => handleToggleBlock(selectedStudent.id, selectedStudent.isBlocked, selectedStudent.name)}
+                                        title={selectedStudent.isBlocked ? "Allow student to log in" : "Block student from logging in"}
                                     >
                                         {selectedStudent.isBlocked ? (
                                             <>
-                                                <FaCheck /> Unblock Access
+                                                <FaCheck /> <span>Unblock Access</span>
                                             </>
                                         ) : (
                                             <>
-                                                <FaBan /> Block Access
+                                                <FaBan /> <span>Block Access</span>
                                             </>
                                         )}
                                     </button>
@@ -695,9 +765,10 @@ function StudentMonitoring() {
                                         type="button"
                                         className="btn-profile-delete"
                                         onClick={() => handleDeleteStudent(selectedStudent.id, selectedStudent.name)}
-                                        title={`Delete ${selectedStudent.name}`}
+                                        title={`Delete ${selectedStudent.name}'s account`}
                                     >
-                                        <FaTrash /> Delete Student
+                                        <FaTrash />
+                                        <span>Delete Student</span>
                                     </button>
                                 </div>
                             </div>
@@ -801,17 +872,9 @@ function StudentMonitoring() {
                                                     </td>
 
                                                     <td>
-                                                        <div className="sm-score-bar-inline">
-                                                            <div className="sm-score-track sm">
-                                                                <div
-                                                                    className={`sm-mon-score-fill ${getScoreClass(result.percentage)}`}
-                                                                    style={{ width: `${Math.min(result.percentage || 0, 100)}%` }}
-                                                                />
-                                                            </div>
-                                                            <span className={`sm-mon-pct ${getScoreClass(result.percentage)}`}>
-                                                                {(result.percentage || 0).toFixed(1)}%
-                                                            </span>
-                                                        </div>
+                                                        <span className={`sm-mon-pct ${getScoreClass(result.percentage)}`}>
+                                                            {(result.percentage || 0).toFixed(1)}%
+                                                        </span>
                                                     </td>
 
                                                     <td>
@@ -957,6 +1020,97 @@ function StudentMonitoring() {
                                     disabled={isSubmittingStudent}
                                 >
                                     {isSubmittingStudent ? 'Creating...' : 'Create Student Account'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ════════════════════════════════════════════════════════════════════════
+                CHANGE PASSWORD MODAL
+               ════════════════════════════════════════════════════════════════════════ */}
+            {isPasswordModalOpen && studentForPassword && (
+                <div className="sm-modal-backdrop" onClick={() => setIsPasswordModalOpen(false)}>
+                    <div className="sm-modal-box" onClick={(e) => e.stopPropagation()}>
+                        <div className="sm-modal-header">
+                            <div className="modal-header-icon key-icon">
+                                <FaKey />
+                            </div>
+                            <div>
+                                <h3 className="modal-title">Change Student Password</h3>
+                                <p className="modal-sub">Update login credentials for <strong>{studentForPassword.name}</strong></p>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn-modal-close"
+                                onClick={() => setIsPasswordModalOpen(false)}
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+
+                        {passwordModalError && (
+                            <div className="sm-modal-alert error">
+                                {passwordModalError}
+                            </div>
+                        )}
+
+                        {passwordModalSuccess && (
+                            <div className="sm-modal-alert success">
+                                <FaCheckCircle style={{ marginRight: 4 }} /> {passwordModalSuccess}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleUpdatePassword} className="sm-modal-form">
+                            <div className="student-modal-identity">
+                                <div><strong>Student:</strong> {studentForPassword.name}</div>
+                                <div><strong>Email:</strong> {studentForPassword.email}</div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-lbl">
+                                    <FaLock style={{ marginRight: 4 }} /> New Password
+                                </label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    placeholder="Enter new password (min. 6 characters)"
+                                    value={newPasswordInput}
+                                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-lbl">
+                                    <FaLock style={{ marginRight: 4 }} /> Confirm New Password
+                                </label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    placeholder="Re-enter new password"
+                                    value={confirmPasswordInput}
+                                    onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="sm-modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn-modal-cancel"
+                                    onClick={() => setIsPasswordModalOpen(false)}
+                                    disabled={isSubmittingPassword}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn-modal-submit"
+                                    disabled={isSubmittingPassword}
+                                >
+                                    {isSubmittingPassword ? 'Updating...' : 'Update Password'}
                                 </button>
                             </div>
                         </form>
