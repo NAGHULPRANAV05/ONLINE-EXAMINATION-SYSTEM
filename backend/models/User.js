@@ -25,6 +25,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['student', 'admin'],
         default: 'student'
+    },
+    isBlocked: {
+        type: Boolean,
+        default: false
+    },
+    blockedReason: {
+        type: String,
+        default: ''
     }
 }, {
     timestamps: true

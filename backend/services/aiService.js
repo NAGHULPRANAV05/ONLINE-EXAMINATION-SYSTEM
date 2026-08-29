@@ -164,37 +164,31 @@ exports.generateCodingQuestion = async (topic, difficulty, language = 'any') => 
 
         const languageNote = language !== 'any' ? `The solution should be implementable in ${language}.` : '';
 
-        const prompt = `Generate a coding problem about "${topic}".
+        const prompt = `Generate a comprehensive coding problem about "${topic}".
 Difficulty level: ${difficulty}
 ${languageNote}
 
 Requirements:
-- Clear problem statement
-- Input/output format specification
-- Constraints
-- At least 3 test cases with input and expected output
-- Test cases should cover edge cases
+- Clear problem statement with constraints and input/output formats
+- Generate exactly 6 test cases:
+  * First 2 test cases MUST be public sample test cases (isHidden: false)
+  * Remaining 4 test cases MUST be comprehensive hidden test cases testing edge cases, large inputs, and boundary conditions (isHidden: true)
 
 Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks, just pure JSON):
 {
   "questionText": "Problem statement with input/output format and constraints",
   "testCases": [
-    {
-      "input": "test input",
-      "output": "expected output"
-    }
+    { "input": "sample input 1", "output": "expected output 1", "isHidden": false },
+    { "input": "sample input 2", "output": "expected output 2", "isHidden": false },
+    { "input": "edge case input 3", "output": "expected output 3", "isHidden": true },
+    { "input": "boundary input 4", "output": "expected output 4", "isHidden": true },
+    { "input": "hidden input 5", "output": "expected output 5", "isHidden": true },
+    { "input": "hidden input 6", "output": "expected output 6", "isHidden": true }
   ],
   "hints": "Optional hints for solving the problem"
 }
 
-The questionText should include:
-1. Problem description
-2. Input format
-3. Output format
-4. Constraints
-5. Example (optional)
-
-Generate exactly 1 coding question in this format.`;
+Generate exactly 1 coding question with 6 test cases in this format.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
@@ -217,19 +211,19 @@ Generate exactly 1 coding question in this format.`;
         }
 
         if (question.testCases.length < 1) {
-            throw new Error('Coding question must have at least 1 test case');
+            throw new Error('Coding question must have test cases');
         }
 
-        // Validate test cases
-        question.testCases.forEach((tc, index) => {
-            if (!tc.input || !tc.output) {
-                throw new Error(`Test case ${index} is missing input or output`);
-            }
-        });
+        // Validate and normalize test cases (ensure isHidden flag is boolean)
+        const validatedTestCases = question.testCases.map((tc, index) => ({
+            input: tc.input || '',
+            output: tc.output || '',
+            isHidden: typeof tc.isHidden === 'boolean' ? tc.isHidden : (index >= 2)
+        }));
 
         return {
             questionText: question.questionText,
-            testCases: question.testCases,
+            testCases: validatedTestCases,
             hints: question.hints || ''
         };
     } catch (error) {

@@ -302,28 +302,62 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
                                                 onClick={() => setSelectedCaseIdx(idx)}
                                             >
                                                 {tc.passed ? <FaCheckCircle /> : <FaTimesCircle />}
-                                                <span>Case {idx + 1}</span>
+                                                <span>{tc.isHidden ? `Case ${idx + 1} 🔒` : `Case ${idx + 1}`}</span>
                                             </button>
                                         ))}
                                     </div>
 
                                     {currentCase && (
-                                        <div className="case-content-grid">
-                                            <div className="case-col">
-                                                <span className="case-col-title">Input</span>
-                                                <pre className="case-pre">{currentCase.input || '(empty)'}</pre>
+                                        currentCase.isHidden ? (
+                                            <div style={{
+                                                padding: '1.25rem',
+                                                background: '#f8fafc',
+                                                borderRadius: '8px',
+                                                border: '1px solid #e2e8f0',
+                                                textAlign: 'center',
+                                                margin: '0.5rem 0'
+                                            }}>
+                                                <div style={{ fontSize: '1.4rem', marginBottom: '0.25rem' }}>🔒</div>
+                                                <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.92rem', color: '#0f172a', fontWeight: '700' }}>
+                                                    Hidden Test Case #{selectedCaseIdx + 1}
+                                                </h4>
+                                                <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: '#64748b' }}>
+                                                    Input and expected output are hidden to evaluate full correctness and prevent hardcoded solutions.
+                                                </p>
+                                                <div style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.35rem',
+                                                    padding: '0.3rem 0.85rem',
+                                                    borderRadius: '9999px',
+                                                    fontSize: '0.78rem',
+                                                    fontWeight: '700',
+                                                    background: currentCase.passed ? '#ecfdf5' : '#fef2f2',
+                                                    color: currentCase.passed ? '#059669' : '#dc2626',
+                                                    border: `1px solid ${currentCase.passed ? '#a7f3d0' : '#fecaca'}`
+                                                }}>
+                                                    {currentCase.passed ? <FaCheckCircle /> : <FaTimesCircle />}
+                                                    <span>{currentCase.passed ? 'PASSED (Execution Valid)' : 'FAILED (Incorrect Output)'}</span>
+                                                </div>
                                             </div>
-                                            <div className="case-col">
-                                                <span className="case-col-title">Expected Output</span>
-                                                <pre className="case-pre">{currentCase.expectedOutput || '(empty)'}</pre>
+                                        ) : (
+                                            <div className="case-content-grid">
+                                                <div className="case-col">
+                                                    <span className="case-col-title">Input</span>
+                                                    <pre className="case-pre">{currentCase.input || '(empty)'}</pre>
+                                                </div>
+                                                <div className="case-col">
+                                                    <span className="case-col-title">Expected Output</span>
+                                                    <pre className="case-pre">{currentCase.expectedOutput || '(empty)'}</pre>
+                                                </div>
+                                                <div className="case-col">
+                                                    <span className="case-col-title">Your Output</span>
+                                                    <pre className={`case-pre ${currentCase.passed ? 'match' : 'mismatch'}`}>
+                                                        {currentCase.actualOutput || '(no output)'}
+                                                    </pre>
+                                                </div>
                                             </div>
-                                            <div className="case-col">
-                                                <span className="case-col-title">Your Output</span>
-                                                <pre className={`case-pre ${currentCase.passed ? 'match' : 'mismatch'}`}>
-                                                    {currentCase.actualOutput || '(no output)'}
-                                                </pre>
-                                            </div>
-                                        </div>
+                                        )
                                     )}
                                 </div>
                             ) : (

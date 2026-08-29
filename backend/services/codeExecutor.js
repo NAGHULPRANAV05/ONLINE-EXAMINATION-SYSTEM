@@ -99,11 +99,14 @@ async function runSingleTest(language, code, testCase) {
         // Cleanup
         await cleanup(language, filePath, compiledPath, tmpDir, extractJavaClassName(code));
 
+        const isHidden = Boolean(testCase.isHidden);
+
         return {
-            input: testCase.input,
-            expectedOutput,
-            actualOutput,
-            passed
+            input: isHidden ? '[Hidden Test Case]' : testCase.input,
+            expectedOutput: isHidden ? '[Hidden Output]' : expectedOutput,
+            actualOutput: isHidden ? (passed ? '[Hidden Output - Passed]' : '[Hidden Output - Failed]') : actualOutput,
+            passed,
+            isHidden
         };
     } catch (error) {
         // Cleanup on error
@@ -113,12 +116,15 @@ async function runSingleTest(language, code, testCase) {
             // Ignore cleanup errors
         }
 
+        const isHidden = Boolean(testCase.isHidden);
+
         return {
-            input: testCase.input,
-            expectedOutput: testCase.output,
-            actualOutput: error.message,
+            input: isHidden ? '[Hidden Test Case]' : testCase.input,
+            expectedOutput: isHidden ? '[Hidden Output]' : testCase.output,
+            actualOutput: isHidden ? '[Hidden Output - Error]' : error.message,
             passed: false,
-            error: true
+            error: true,
+            isHidden
         };
     }
 }

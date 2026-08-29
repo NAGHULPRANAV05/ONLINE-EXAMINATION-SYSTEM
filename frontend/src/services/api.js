@@ -41,6 +41,12 @@ export const authAPI = {
     getMe: () => api.get('/auth/me')
 };
 
+// User / Student Management APIs
+export const userAPI = {
+    getAllStudents: () => api.get('/auth/students'),
+    toggleBlockStudent: (id, data) => api.put(`/auth/students/${id}/block`, data)
+};
+
 // Subject APIs
 export const subjectAPI = {
     getAll: (params) => api.get('/subjects', { params }),

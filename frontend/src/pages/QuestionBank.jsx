@@ -25,6 +25,15 @@ function QuestionBank() {
     const [typeFilter, setTypeFilter] = useState('all'); // 'all' | 'mcq' | 'coding'
     const [diffFilter, setDiffFilter] = useState('all'); // 'all' | 'easy' | 'medium' | 'hard'
 
+    const default6TestCases = [
+        { input: '', output: '', isHidden: false },
+        { input: '', output: '', isHidden: false },
+        { input: '', output: '', isHidden: true },
+        { input: '', output: '', isHidden: true },
+        { input: '', output: '', isHidden: true },
+        { input: '', output: '', isHidden: true }
+    ];
+
     const [formData, setFormData] = useState({
         type: 'mcq',
         subject: '',
@@ -32,7 +41,7 @@ function QuestionBank() {
         questionText: '',
         options: ['', '', '', ''],
         correctAnswer: '',
-        testCases: [{ input: '', output: '' }],
+        testCases: default6TestCases,
         marks: 1
     });
 
@@ -116,7 +125,14 @@ function QuestionBank() {
             questionText: '',
             options: ['', '', '', ''],
             correctAnswer: '',
-            testCases: [{ input: '', output: '' }],
+            testCases: [
+                { input: '', output: '', isHidden: false },
+                { input: '', output: '', isHidden: false },
+                { input: '', output: '', isHidden: true },
+                { input: '', output: '', isHidden: true },
+                { input: '', output: '', isHidden: true },
+                { input: '', output: '', isHidden: true }
+            ],
             marks: 1
         });
         setShowModal(true);
@@ -142,7 +158,14 @@ function QuestionBank() {
             questionText: '',
             options: ['', '', '', ''],
             correctAnswer: '',
-            testCases: [{ input: '', output: '' }],
+            testCases: [
+                { input: '', output: '', isHidden: false },
+                { input: '', output: '', isHidden: false },
+                { input: '', output: '', isHidden: true },
+                { input: '', output: '', isHidden: true },
+                { input: '', output: '', isHidden: true },
+                { input: '', output: '', isHidden: true }
+            ],
             marks: 1
         });
     };
@@ -695,11 +718,48 @@ function QuestionBank() {
                                     </div>
                                 ) : (
                                     <div className="coding-section">
-                                        <label className="form-lbl">Sample Test Cases</label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+                                            <label className="form-lbl" style={{ margin: 0 }}>
+                                                Test Cases ({formData.testCases.length} total • {formData.testCases.filter(t => !t.isHidden).length} Public, {formData.testCases.filter(t => t.isHidden).length} Hidden)
+                                            </label>
+                                            <button
+                                                type="button"
+                                                className="btn-quick-6tc"
+                                                onClick={() => setFormData({
+                                                    ...formData,
+                                                    testCases: [
+                                                        { input: '', output: '', isHidden: false },
+                                                        { input: '', output: '', isHidden: false },
+                                                        { input: '', output: '', isHidden: true },
+                                                        { input: '', output: '', isHidden: true },
+                                                        { input: '', output: '', isHidden: true },
+                                                        { input: '', output: '', isHidden: true }
+                                                    ]
+                                                })}
+                                            >
+                                                ⚡ 6 Standard Cases
+                                            </button>
+                                        </div>
+
                                         {formData.testCases.map((tc, i) => (
-                                            <div key={i} className="tc-box">
+                                            <div key={i} className={`tc-box ${tc.isHidden ? 'hidden-case' : 'public-case'}`}>
                                                 <div className="tc-header">
-                                                    <span>Test Case #{i + 1}</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                                                        <span>Test Case #{i + 1}</span>
+                                                        <button
+                                                            type="button"
+                                                            className={`btn-toggle-hidden ${tc.isHidden ? 'is-hidden' : 'is-public'}`}
+                                                            onClick={() => {
+                                                                const newTCs = [...formData.testCases];
+                                                                newTCs[i].isHidden = !newTCs[i].isHidden;
+                                                                setFormData({ ...formData, testCases: newTCs });
+                                                            }}
+                                                            title="Click to toggle Public / Hidden"
+                                                        >
+                                                            {tc.isHidden ? '🔒 Hidden' : '👁️ Public'}
+                                                        </button>
+                                                    </div>
+
                                                     {formData.testCases.length > 1 && (
                                                         <button
                                                             type="button"
@@ -747,13 +807,18 @@ function QuestionBank() {
                                             </div>
                                         ))}
 
-                                        <button
-                                            type="button"
-                                            className="btn-add-tc"
-                                            onClick={() => setFormData({ ...formData, testCases: [...formData.testCases, { input: '', output: '' }] })}
-                                        >
-                                            + Add Test Case
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '0.45rem', marginTop: '0.35rem' }}>
+                                            <button
+                                                type="button"
+                                                className="btn-add-tc"
+                                                onClick={() => setFormData({
+                                                    ...formData,
+                                                    testCases: [...formData.testCases, { input: '', output: '', isHidden: formData.testCases.length >= 2 }]
+                                                })}
+                                            >
+                                                + Add Test Case
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 

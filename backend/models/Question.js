@@ -44,7 +44,11 @@ const questionSchema = new mongoose.Schema({
     testCases: {
         type: [{
             input: String,
-            output: String
+            output: String,
+            isHidden: {
+                type: Boolean,
+                default: false
+            }
         }],
         required: function () {
             return this.type === 'coding';

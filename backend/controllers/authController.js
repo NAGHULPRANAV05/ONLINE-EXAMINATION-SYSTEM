@@ -98,6 +98,14 @@ exports.login = async (req, res) => {
             });
         }
 
+        // Check if student is blocked
+        if (user.isBlocked) {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account has been blocked by the administrator. Access to the portal is restricted.'
+            });
+        }
+
         // Generate token
         const token = generateToken(user._id);
 
@@ -109,7 +117,8 @@ exports.login = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                isBlocked: user.isBlocked
             }
         });
     } catch (error) {
@@ -134,7 +143,78 @@ exports.getMe = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                isBlocked: user.isBlocked
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Get all students (Admin)
+// @route   GET /api/auth/students
+// @access  Private/Admin
+exports.getAllStudents = async (req, res) => {
+    try {
+        const students = await User.find({ role: 'student' })
+            .select('-password')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: students.length,
+            students
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Toggle block/unblock student (Admin)
+// @route   PUT /api/auth/students/:id/block
+// @access  Private/Admin
+exports.toggleBlockStudent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isBlocked, reason } = req.body;
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        if (user.role === 'admin') {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot block administrator accounts'
+            });
+        }
+
+        user.isBlocked = typeof isBlocked === 'boolean' ? isBlocked : !user.isBlocked;
+        if (reason !== undefined) user.blockedReason = reason;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Student account ${user.isBlocked ? 'blocked' : 'unblocked'} successfully`,
+            student: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                isBlocked: user.isBlocked,
+                blockedReason: user.blockedReason
             }
         });
     } catch (error) {

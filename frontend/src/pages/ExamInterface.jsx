@@ -336,31 +336,50 @@ function ExamInterface() {
                                     {currentQuestion.questionText}
                                 </div>
 
-                                {currentQuestion.testCases?.length > 0 && (
+                                {currentQuestion.testCases?.some(tc => !tc.isHidden) && (
                                     <div className="sample-cases-block">
                                         <h4 className="sample-heading">Sample Test Cases</h4>
-                                        {currentQuestion.testCases.map((tc, idx) => (
-                                            <div key={idx} className="sample-case-box">
-                                                <div className="sample-case-top">
-                                                    <span>Example {idx + 1}</span>
-                                                    <button
-                                                        type="button"
-                                                        className="btn-copy-sm"
-                                                        onClick={() => handleCopyTestCase(tc.input, idx)}
-                                                    >
-                                                        {copiedIdx === idx ? <><FaCheck /> Copied</> : <><FaCopy /> Copy Input</>}
-                                                    </button>
+                                        {currentQuestion.testCases
+                                            .filter(tc => !tc.isHidden)
+                                            .map((tc, idx) => (
+                                                <div key={idx} className="sample-case-box">
+                                                    <div className="sample-case-top">
+                                                        <span>Example {idx + 1}</span>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-copy-sm"
+                                                            onClick={() => handleCopyTestCase(tc.input, idx)}
+                                                        >
+                                                            {copiedIdx === idx ? <><FaCheck /> Copied</> : <><FaCopy /> Copy Input</>}
+                                                        </button>
+                                                    </div>
+                                                    <div className="sample-case-row">
+                                                        <span className="sample-lbl">Input</span>
+                                                        <pre>{tc.input || '(empty)'}</pre>
+                                                    </div>
+                                                    <div className="sample-case-row">
+                                                        <span className="sample-lbl">Output</span>
+                                                        <pre>{tc.output || '(empty)'}</pre>
+                                                    </div>
                                                 </div>
-                                                <div className="sample-case-row">
-                                                    <span className="sample-lbl">Input</span>
-                                                    <pre>{tc.input || '(empty)'}</pre>
-                                                </div>
-                                                <div className="sample-case-row">
-                                                    <span className="sample-lbl">Output</span>
-                                                    <pre>{tc.output || '(empty)'}</pre>
-                                                </div>
+                                            ))}
+
+                                        {currentQuestion.testCases.some(tc => tc.isHidden) && (
+                                            <div style={{
+                                                marginTop: '0.65rem',
+                                                padding: '0.5rem 0.75rem',
+                                                background: '#f1f5f9',
+                                                borderRadius: '6px',
+                                                fontSize: '0.78rem',
+                                                color: '#64748b',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.35rem'
+                                            }}>
+                                                <span>🔒</span>
+                                                <span><strong>+{currentQuestion.testCases.filter(tc => tc.isHidden).length} hidden test cases</strong> will be evaluated during execution and scoring.</span>
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                 )}
                             </div>
