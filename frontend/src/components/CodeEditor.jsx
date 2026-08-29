@@ -7,7 +7,7 @@ import {
     FaTimesCircle,
     FaChevronUp,
     FaChevronDown,
-    FaFlask,
+    FaLock,
     FaTerminal
 } from 'react-icons/fa';
 import Editor from '@monaco-editor/react';
@@ -71,9 +71,9 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
     const defaultTemplate = STARTER_TEMPLATES[langKey] || STARTER_TEMPLATES.python;
 
     const [code, setCode] = useState(initialCode && initialCode.trim() ? initialCode : defaultTemplate);
-    const [activeTab, setActiveTab] = useState('tests'); // 'tests' | 'custom'
     const [selectedCaseIdx, setSelectedCaseIdx] = useState(0);
     const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+    const [showCustomInput, setShowCustomInput] = useState(false);
 
     // Custom Input state
     const [customInput, setCustomInput] = useState('');
@@ -100,7 +100,7 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
     };
 
     const handleReset = () => {
-        if (window.confirm('Reset code to default template?')) {
+        if (window.confirm('Reset code to initial template?')) {
             const template = STARTER_TEMPLATES[langKey] || STARTER_TEMPLATES.python;
             setCode(template);
             if (onCodeChange) onCodeChange(template);
@@ -109,7 +109,7 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
         }
     };
 
-    // Run against sample test cases
+    // Run against test cases (both public and hidden)
     const runCode = async () => {
         if (!code.trim()) {
             setErrorMessage('Please write some code first.');
@@ -120,7 +120,7 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
         setErrorMessage('');
         setTestResults(null);
         setIsConsoleOpen(true);
-        setActiveTab('tests');
+        setShowCustomInput(false);
 
         try {
             const response = await codeAPI.execute({
@@ -139,7 +139,7 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
         }
     };
 
-    // Run with custom stdin
+    // Run custom input
     const runCustom = async () => {
         if (!code.trim()) {
             setCustomOutput('Please write some code first.');
@@ -176,11 +176,13 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
         return 'plaintext';
     };
 
-    const currentCase = testResults?.testResults?.[selectedCaseIdx] || null;
+    const casesToDisplay = testResults?.testResults || testCases;
+    const activeCase = casesToDisplay[selectedCaseIdx] || null;
+    const isCurrentHidden = activeCase?.isHidden || (selectedCaseIdx >= 2 && !testResults);
 
     return (
         <div className="clean-editor-wrapper">
-            {/* Minimal Toolbar */}
+            {/* Simple Clean Toolbar */}
             <div className="clean-editor-toolbar">
                 <div className="editor-lang-tag">
                     <span className="lang-indicator-dot"></span>
@@ -190,11 +192,23 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
                 <div className="editor-actions">
                     <button
                         type="button"
+                        className={`btn-editor-action ${showCustomInput ? 'active' : ''}`}
+                        onClick={() => {
+                            setShowCustomInput(prev => !prev);
+                            setIsConsoleOpen(true);
+                        }}
+                    >
+                        <FaTerminal style={{ fontSize: '0.72rem' }} />
+                        <span>Custom Input</span>
+                    </button>
+
+                    <button
+                        type="button"
                         className="btn-editor-action"
                         onClick={handleReset}
                         title="Reset code template"
                     >
-                        <FaUndo style={{ fontSize: '0.75rem' }} />
+                        <FaUndo style={{ fontSize: '0.72rem' }} />
                         <span>Reset</span>
                     </button>
 
@@ -211,7 +225,7 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
                             </>
                         ) : (
                             <>
-                                <FaPlay style={{ fontSize: '0.7rem' }} />
+                                <FaPlay style={{ fontSize: '0.68rem' }} />
                                 <span>Run Code</span>
                             </>
                         )}
@@ -219,7 +233,7 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
                 </div>
             </div>
 
-            {/* Editor Container */}
+            {/* Editor Area */}
             <div className="clean-editor-area">
                 <Editor
                     height="100%"
@@ -244,156 +258,140 @@ function CodeEditor({ language = 'python', initialCode = '', testCases = [], onC
                 />
             </div>
 
-            {/* Minimal Console Panel */}
+            {/* Simple Bottom Console / Test Panel */}
             <div className={`clean-console ${!isConsoleOpen ? 'collapsed' : ''}`}>
                 {/* Console Bar */}
                 <div className="clean-console-header">
-                    <div className="console-tabs">
-                        <button
-                            type="button"
-                            className={`c-tab ${activeTab === 'tests' ? 'active' : ''}`}
-                            onClick={() => { setActiveTab('tests'); setIsConsoleOpen(true); }}
-                        >
-                            <FaFlask />
-                            <span>Test Cases</span>
+                    {!showCustomInput ? (
+                        <div className="console-case-tabs">
+                            {casesToDisplay.map((tc, idx) => {
+                                const isHidden = tc.isHidden || (idx >= 2 && !testResults);
+                                const hasRun = Boolean(testResults);
+                                const isPassed = tc.passed;
+
+                                return (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        className={`case-pill-btn ${selectedCaseIdx === idx ? 'active' : ''} ${hasRun ? (isPassed ? 'pass' : 'fail') : ''}`}
+                                        onClick={() => setSelectedCaseIdx(idx)}
+                                    >
+                                        {hasRun && (
+                                            isPassed ? <FaCheckCircle className="pill-icon pass" /> : <FaTimesCircle className="pill-icon fail" />
+                                        )}
+                                        <span>Case {idx + 1}</span>
+                                        {isHidden && <FaLock className="pill-lock-icon" title="Hidden Test Case" />}
+                                    </button>
+                                );
+                            })}
+
                             {testResults && (
-                                <span className={`c-badge ${testResults.passedTests === testResults.totalTests ? 'pass' : 'fail'}`}>
-                                    {testResults.passedTests}/{testResults.totalTests} Passed
+                                <span className={`console-score-badge ${testResults.passedTests === testResults.totalTests ? 'all-pass' : 'some-fail'}`}>
+                                    {testResults.passedTests} / {testResults.totalTests} Passed
                                 </span>
                             )}
-                        </button>
-
-                        <button
-                            type="button"
-                            className={`c-tab ${activeTab === 'custom' ? 'active' : ''}`}
-                            onClick={() => { setActiveTab('custom'); setIsConsoleOpen(true); }}
-                        >
-                            <FaTerminal />
-                            <span>Custom Input</span>
-                        </button>
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="console-custom-header">
+                            <span>Standard Input / Output Console</span>
+                        </div>
+                    )}
 
                     <button
                         type="button"
                         className="btn-toggle-console"
                         onClick={() => setIsConsoleOpen(prev => !prev)}
-                        title={isConsoleOpen ? 'Collapse Console' : 'Expand Console'}
+                        title={isConsoleOpen ? 'Collapse' : 'Expand'}
                     >
                         {isConsoleOpen ? <FaChevronDown /> : <FaChevronUp />}
                     </button>
                 </div>
 
-                {/* Console Content */}
+                {/* Console Body */}
                 {isConsoleOpen && (
                     <div className="clean-console-body">
                         {errorMessage ? (
                             <div className="console-error-box">
                                 {errorMessage}
                             </div>
-                        ) : activeTab === 'tests' ? (
-                            testResults ? (
-                                <div className="tests-view">
-                                    <div className="test-case-pills">
-                                        {testResults.testResults.map((tc, idx) => (
-                                            <button
-                                                key={idx}
-                                                type="button"
-                                                className={`case-pill ${selectedCaseIdx === idx ? 'active' : ''} ${tc.passed ? 'pass' : 'fail'}`}
-                                                onClick={() => setSelectedCaseIdx(idx)}
-                                            >
-                                                {tc.passed ? <FaCheckCircle /> : <FaTimesCircle />}
-                                                <span>{tc.isHidden ? `Case ${idx + 1} 🔒` : `Case ${idx + 1}`}</span>
-                                            </button>
-                                        ))}
+                        ) : showCustomInput ? (
+                            /* Custom Input/Output Split */
+                            <div className="custom-input-wrap">
+                                <div className="custom-box">
+                                    <span className="case-lbl">Input (stdin)</span>
+                                    <textarea
+                                        value={customInput}
+                                        onChange={(e) => setCustomInput(e.target.value)}
+                                        placeholder="Type standard input here..."
+                                        rows={3}
+                                        className="custom-textarea"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn-run-stdin"
+                                        onClick={runCustom}
+                                        disabled={isCustomRunning}
+                                    >
+                                        {isCustomRunning ? 'Executing...' : 'Run with Custom Input'}
+                                    </button>
+                                </div>
+                                <div className="custom-box">
+                                    <span className="case-lbl">Output</span>
+                                    <pre className="custom-output-pre">
+                                        {customOutput || '(Output will appear here)'}
+                                    </pre>
+                                </div>
+                            </div>
+                        ) : activeCase ? (
+                            isCurrentHidden ? (
+                                /* Hidden Test Case View: Only Shows Passed / Failed */
+                                <div className="hidden-case-card">
+                                    <div className="hidden-case-top">
+                                        <div className="hidden-tag">
+                                            <FaLock /> Hidden Test Case #{selectedCaseIdx + 1}
+                                        </div>
+                                        <span className="hidden-note">
+                                            Inputs & expected outputs are hidden to verify overall algorithm correctness
+                                        </span>
                                     </div>
 
-                                    {currentCase && (
-                                        currentCase.isHidden ? (
-                                            <div style={{
-                                                padding: '1.25rem',
-                                                background: '#f8fafc',
-                                                borderRadius: '8px',
-                                                border: '1px solid #e2e8f0',
-                                                textAlign: 'center',
-                                                margin: '0.5rem 0'
-                                            }}>
-                                                <div style={{ fontSize: '1.4rem', marginBottom: '0.25rem' }}>🔒</div>
-                                                <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.92rem', color: '#0f172a', fontWeight: '700' }}>
-                                                    Hidden Test Case #{selectedCaseIdx + 1}
-                                                </h4>
-                                                <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: '#64748b' }}>
-                                                    Input and expected output are hidden to evaluate full correctness and prevent hardcoded solutions.
-                                                </p>
-                                                <div style={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.35rem',
-                                                    padding: '0.3rem 0.85rem',
-                                                    borderRadius: '9999px',
-                                                    fontSize: '0.78rem',
-                                                    fontWeight: '700',
-                                                    background: currentCase.passed ? '#ecfdf5' : '#fef2f2',
-                                                    color: currentCase.passed ? '#059669' : '#dc2626',
-                                                    border: `1px solid ${currentCase.passed ? '#a7f3d0' : '#fecaca'}`
-                                                }}>
-                                                    {currentCase.passed ? <FaCheckCircle /> : <FaTimesCircle />}
-                                                    <span>{currentCase.passed ? 'PASSED (Execution Valid)' : 'FAILED (Incorrect Output)'}</span>
-                                                </div>
+                                    <div className="hidden-status-row">
+                                        {testResults ? (
+                                            <div className={`hidden-result-pill ${activeCase.passed ? 'passed' : 'failed'}`}>
+                                                {activeCase.passed ? <FaCheckCircle /> : <FaTimesCircle />}
+                                                <span>{activeCase.passed ? 'TEST CASE PASSED' : 'TEST CASE FAILED'}</span>
                                             </div>
                                         ) : (
-                                            <div className="case-content-grid">
-                                                <div className="case-col">
-                                                    <span className="case-col-title">Input</span>
-                                                    <pre className="case-pre">{currentCase.input || '(empty)'}</pre>
-                                                </div>
-                                                <div className="case-col">
-                                                    <span className="case-col-title">Expected Output</span>
-                                                    <pre className="case-pre">{currentCase.expectedOutput || '(empty)'}</pre>
-                                                </div>
-                                                <div className="case-col">
-                                                    <span className="case-col-title">Your Output</span>
-                                                    <pre className={`case-pre ${currentCase.passed ? 'match' : 'mismatch'}`}>
-                                                        {currentCase.actualOutput || '(no output)'}
-                                                    </pre>
-                                                </div>
+                                            <div className="hidden-unrun-pill">
+                                                <span>🔒 Not evaluated yet — Click "Run Code" to test</span>
                                             </div>
-                                        )
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="console-placeholder">
-                                    Click <strong>"Run Code"</strong> to test your solution against test cases.
+                                /* Public Test Case View */
+                                <div className="public-case-grid">
+                                    <div className="case-col">
+                                        <span className="case-lbl">Input</span>
+                                        <pre className="case-box-pre">{activeCase.input || '(empty)'}</pre>
+                                    </div>
+                                    <div className="case-col">
+                                        <span className="case-lbl">Expected Output</span>
+                                        <pre className="case-box-pre">{activeCase.expectedOutput || activeCase.output || '(empty)'}</pre>
+                                    </div>
+                                    {testResults && (
+                                        <div className="case-col">
+                                            <span className="case-lbl">Your Output</span>
+                                            <pre className={`case-box-pre ${activeCase.passed ? 'pass-box' : 'fail-box'}`}>
+                                                {activeCase.actualOutput || '(no output)'}
+                                            </pre>
+                                        </div>
+                                    )}
                                 </div>
                             )
                         ) : (
-                            /* Custom Input Tab */
-                            <div className="custom-input-view">
-                                <div className="custom-split">
-                                    <div className="custom-col">
-                                        <span className="case-col-title">Standard Input</span>
-                                        <textarea
-                                            value={customInput}
-                                            onChange={(e) => setCustomInput(e.target.value)}
-                                            placeholder="Enter standard input..."
-                                            className="custom-input-box"
-                                            rows={3}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={runCustom}
-                                            disabled={isCustomRunning}
-                                            className="btn-run-custom"
-                                        >
-                                            {isCustomRunning ? 'Running...' : 'Run with Input'}
-                                        </button>
-                                    </div>
-                                    <div className="custom-col">
-                                        <span className="case-col-title">Standard Output</span>
-                                        <pre className="custom-output-box">
-                                            {customOutput || '(Output will appear here)'}
-                                        </pre>
-                                    </div>
-                                </div>
+                            <div className="console-empty">
+                                Click <strong>"Run Code"</strong> to test your solution.
                             </div>
                         )}
                     </div>

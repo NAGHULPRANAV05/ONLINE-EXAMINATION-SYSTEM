@@ -336,12 +336,34 @@ function ExamInterface() {
                                     {currentQuestion.questionText}
                                 </div>
 
-                                {currentQuestion.testCases?.some(tc => !tc.isHidden) && (
+                                {currentQuestion.testCases?.length > 0 && (
                                     <div className="sample-cases-block">
-                                        <h4 className="sample-heading">Sample Test Cases</h4>
-                                        {currentQuestion.testCases
-                                            .filter(tc => !tc.isHidden)
-                                            .map((tc, idx) => (
+                                        <h4 className="sample-heading">
+                                            Test Cases ({currentQuestion.testCases.length} Total • {currentQuestion.testCases.filter(tc => !tc.isHidden).length} Public, {currentQuestion.testCases.filter(tc => tc.isHidden).length} Hidden)
+                                        </h4>
+
+                                        {currentQuestion.testCases.map((tc, idx) => {
+                                            const isHidden = tc.isHidden;
+                                            return isHidden ? (
+                                                <div key={idx} className="sample-case-box hidden-case-entry">
+                                                    <div className="sample-case-top">
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '700' }}>
+                                                            🔒 Test Case {idx + 1} (Hidden)
+                                                        </span>
+                                                        <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '600' }}>
+                                                            Evaluated on execution
+                                                        </span>
+                                                    </div>
+                                                    <div className="sample-case-row">
+                                                        <span className="sample-lbl">Input</span>
+                                                        <pre style={{ fontStyle: 'italic', color: '#64748b' }}>[Hidden Input]</pre>
+                                                    </div>
+                                                    <div className="sample-case-row">
+                                                        <span className="sample-lbl">Output</span>
+                                                        <pre style={{ fontStyle: 'italic', color: '#64748b' }}>[Hidden Output]</pre>
+                                                    </div>
+                                                </div>
+                                            ) : (
                                                 <div key={idx} className="sample-case-box">
                                                     <div className="sample-case-top">
                                                         <span>Example {idx + 1}</span>
@@ -362,24 +384,8 @@ function ExamInterface() {
                                                         <pre>{tc.output || '(empty)'}</pre>
                                                     </div>
                                                 </div>
-                                            ))}
-
-                                        {currentQuestion.testCases.some(tc => tc.isHidden) && (
-                                            <div style={{
-                                                marginTop: '0.65rem',
-                                                padding: '0.5rem 0.75rem',
-                                                background: '#f1f5f9',
-                                                borderRadius: '6px',
-                                                fontSize: '0.78rem',
-                                                color: '#64748b',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.35rem'
-                                            }}>
-                                                <span>🔒</span>
-                                                <span><strong>+{currentQuestion.testCases.filter(tc => tc.isHidden).length} hidden test cases</strong> will be evaluated during execution and scoring.</span>
-                                            </div>
-                                        )}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
