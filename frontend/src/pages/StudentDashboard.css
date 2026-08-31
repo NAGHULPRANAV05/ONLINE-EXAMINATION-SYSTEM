@@ -10,11 +10,34 @@
 
 /* ---- Hero ---- */
 .sd-hero {
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 45%, #2563eb 100%);
   padding: 2.5rem 0 4rem;
   position: relative;
   overflow: hidden;
+}
+
+.sd-hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -5%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.sd-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -50%;
+  left: -4%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .sd-hero-content {
@@ -26,7 +49,7 @@
 }
 
 .sd-hero h1 {
-  font-size: 2rem;
+  font-size: 2.15rem;
   font-weight: 800;
   color: #ffffff;
   margin-bottom: 0.4rem;
@@ -35,7 +58,9 @@
 }
 
 .sd-hero h1 span {
-  color: #60a5fa;
+  background: linear-gradient(135deg, #93c5fd, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .sd-hero-wave {
@@ -47,7 +72,7 @@
 
 .sd-hero-sub {
   font-size: 0.95rem;
-  color: #94a3b8;
+  color: #cbd5e1;
   max-width: 620px;
   line-height: 1.55;
   margin: 0;
@@ -71,32 +96,54 @@
 .sd-stat {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 1.15rem 1.25rem;
-  transition: all 0.2s ease;
+  border-radius: 16px;
+  padding: 1.2rem 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
   animation: sdCardIn 0.35s ease both;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
+.sd-stat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+}
+
+.sd-stat.blue::before    { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.sd-stat.indigo::before  { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.sd-stat.amber::before   { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.sd-stat.emerald::before { background: linear-gradient(90deg, #059669, #34d399); }
+.sd-stat.purple::before  { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.sd-stat.rose::before    { background: linear-gradient(90deg, #e11d48, #fb7185); }
+
 .sd-stat:hover {
-  transform: translateY(-2px);
-  border-color: #2563eb;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
 }
 
 .sd-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.95rem;
   margin-bottom: 0.65rem;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
 }
+
+.sd-stat-icon.blue    { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.sd-stat-icon.indigo  { background: #eef2ff; color: #6366f1; border: 1px solid #c7d2fe; }
+.sd-stat-icon.amber   { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+.sd-stat-icon.emerald { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.sd-stat-icon.purple  { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+.sd-stat-icon.rose    { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
 
 
 .sd-stat-icon.indigo {

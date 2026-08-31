@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaGraduationCap, FaClock, FaClipboardList, FaPlay, FaSearch, FaRedo } from 'react-icons/fa';
+import {
+    FaGraduationCap, FaClock, FaClipboardList,
+    FaPlay, FaSearch, FaRedo, FaBookOpen, FaStar,
+    FaFilter, FaChevronDown
+} from 'react-icons/fa';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { examAPI, resultAPI } from '../services/api';
 import './StudentExams.css';
@@ -61,14 +65,26 @@ function StudentExams() {
                     <div className="se-controls">
                         <div className="se-search-wrap">
                             <FaSearch className="se-search-icon" />
-                            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search exams…" />
+                            <input
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                placeholder="Search exams…"
+                            />
                         </div>
-                        <select className="se-filter" value={diffFilter} onChange={e => setDiffFilter(e.target.value)}>
-                            <option value="all">All Levels</option>
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
-                        </select>
+                        <div className="se-filter-wrap">
+                            <FaFilter className="se-filter-icon" />
+                            <select
+                                className="se-filter"
+                                value={diffFilter}
+                                onChange={e => setDiffFilter(e.target.value)}
+                            >
+                                <option value="all">All Levels</option>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                            <FaChevronDown className="se-chevron-icon" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -87,13 +103,25 @@ function StudentExams() {
                                     key={exam._id}
                                     style={{ animationDelay: `${i * 0.04}s` }}
                                 >
+                                    {/* Top green accent line */}
+                                    <div className="se-card-accent" />
+
                                     {/* Body */}
                                     <div className="se-card-body">
                                         <div className="se-card-badges">
-                                            <span className="se-badge subject">{exam.subject?.name}</span>
-                                            <span className={`se-badge diff-${exam.difficulty}`}>{exam.difficulty}</span>
+                                            <span className="se-badge subject">
+                                                <FaBookOpen /> {exam.subject?.name}
+                                            </span>
+                                            <span className={`se-badge ${exam.difficulty}`}>
+                                                {exam.difficulty}
+                                            </span>
+                                            <span className="se-badge active-status">
+                                                <span className="se-dot" /> ACTIVE
+                                            </span>
                                             {attempted && (
-                                                <span className="se-badge attempted-tag">Attempted</span>
+                                                <span className="se-badge attempted-tag">
+                                                    ✓ Attempted
+                                                </span>
                                             )}
                                         </div>
 
@@ -102,12 +130,12 @@ function StudentExams() {
 
                                         <div className="se-card-meta">
                                             <span className="se-meta-item"><FaClock /> {exam.duration} min</span>
-                                            <span className="se-meta-item"><FaClipboardList /> {exam.questions?.length || 0} Questions</span>
-                                            <span className="se-meta-item">🏆 {exam.totalMarks} Marks</span>
+                                            <span className="se-meta-item"><FaStar /> {exam.totalMarks} marks</span>
+                                            <span className="se-meta-item"><FaClipboardList /> {exam.questions?.length || 0} questions</span>
                                         </div>
 
                                         <div className="se-fs-notice">
-                                            <span>Full-screen mode enforced</span>
+                                            <span>🔒 Full-screen mode enforced</span>
                                         </div>
                                     </div>
 

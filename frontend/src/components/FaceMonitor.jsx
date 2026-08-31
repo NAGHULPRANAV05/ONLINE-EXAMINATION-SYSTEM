@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as faceapi from 'face-api.js';
-import { FaVideo, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import { FaVideo, FaExclamationTriangle, FaCheckCircle, FaUsers, FaUserSlash } from 'react-icons/fa';
 
 const MAX_VIOLATIONS = 3;
-const DETECTION_INTERVAL_MS = 400;
-const NO_FACE_TIMEOUT_MS = 4000;
-const YAW_THRESHOLD = 0.18; // ratio threshold for left/right head turn (lower = more sensitive)
+const DETECTION_INTERVAL_MS = 300; // Fast 300ms checks (~3.3 scans per second)
+const NO_FACE_TIMEOUT_MS = 2000; // 2 seconds threshold before recording no-head violation
+const YAW_THRESHOLD = 0.14; // Strict & sensitive threshold for slight left / right head turns
+const VIOLATION_COOLDOWN_MS = 2500; // Cooldown to avoid registering 5 violations in a single second
 
 function FaceMonitor({ onViolation, onTerminate, active }) {
     const videoRef = useRef(null);
@@ -14,6 +15,8 @@ function FaceMonitor({ onViolation, onTerminate, active }) {
     const intervalRef = useRef(null);
     const noFaceTimerRef = useRef(null);
     const violationCountRef = useRef(0);
+    const lastViolationTimeRef = useRef(0);
+    const isWarmedUpRef = useRef(false);
 
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [cameraReady, setCameraReady] = useState(false);
@@ -47,14 +50,23 @@ function FaceMonitor({ onViolation, onTerminate, active }) {
         const startCamera = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 320, height: 240, facingMode: 'user' }
+                    video: {
+                        width: { ideal: 320 },
+                        height: { ideal: 240 },
+                        facingMode: 'user'
+                    }
                 });
                 streamRef.current = stream;
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
                     videoRef.current.onloadedmetadata = () => {
+                        videoRef.current.play().catch(console.warn);
                         setCameraReady(true);
                         setStatus('monitoring');
+                        // 1.5s warmup buffer for video camera exposure to initialize
+                        setTimeout(() => {
+                            isWarmedUpRef.current = true;
+                        }, 1500);
                     };
                 }
             } catch (err) {
@@ -73,110 +85,117 @@ function FaceMonitor({ onViolation, onTerminate, active }) {
         };
     }, [modelsLoaded, active]);
 
-    // Handle violation
+    // Handle violation with cooldown
     const triggerViolation = useCallback((message) => {
-        violationCountRef.current += 1;
-        const count = violationCountRef.current;
-        setViolationCount(count);
-        setStatus('violation');
+        const now = Date.now();
         setWarningMessage(message);
 
-        if (onViolation) onViolation(count);
+        // Enforce cooldown so 1 incident doesn't consume all 3 violation strikes immediately
+        if (now - lastViolationTimeRef.current > VIOLATION_COOLDOWN_MS) {
+            lastViolationTimeRef.current = now;
+            violationCountRef.current += 1;
+            const count = violationCountRef.current;
+            setViolationCount(count);
+            setStatus('violation');
 
-        if (count >= MAX_VIOLATIONS) {
-            // Stop detection and terminate
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            if (noFaceTimerRef.current) clearTimeout(noFaceTimerRef.current);
-            if (onTerminate) onTerminate();
-            return;
+            if (onViolation) onViolation(count);
+
+            if (count >= MAX_VIOLATIONS) {
+                if (intervalRef.current) clearInterval(intervalRef.current);
+                if (noFaceTimerRef.current) clearTimeout(noFaceTimerRef.current);
+                if (onTerminate) onTerminate();
+                return;
+            }
+        } else {
+            setStatus('violation');
         }
 
-        // Reset warning after 2 seconds
+        // Reset warning state after 2.5 seconds if exam not terminated
         setTimeout(() => {
             if (violationCountRef.current < MAX_VIOLATIONS) {
                 setStatus('monitoring');
                 setWarningMessage('');
             }
-        }, 2000);
+        }, 2500);
     }, [onViolation, onTerminate]);
 
-    // Run face detection loop
+    // Run high-sensitivity face & head detection loop
     useEffect(() => {
         if (!cameraReady || !active) return;
 
         const detectFace = async () => {
-            if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) return;
+            const video = videoRef.current;
+            if (!video || video.paused || video.ended || video.readyState < 2) return;
 
             try {
                 const detections = await faceapi
-                    .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions({
+                    .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({
                         inputSize: 224,
-                        scoreThreshold: 0.4
+                        scoreThreshold: 0.22 // High-sensitivity detection
                     }))
                     .withFaceLandmarks();
 
+                // Skip during camera warmup
+                if (!isWarmedUpRef.current) return;
+
+                // 1. HEAD / FACE NOT VISIBLE
                 if (!detections || detections.length === 0) {
-                    // No face detected — start no-face timer
+                    setStatus('no-face');
+                    setWarningMessage('Head is not visible! Please face the camera.');
+
                     if (!noFaceTimerRef.current) {
-                        setStatus('no-face');
-                        setWarningMessage('Face not detected! Please look at the screen.');
                         noFaceTimerRef.current = setTimeout(() => {
-                            triggerViolation('Face not detected for too long!');
+                            triggerViolation('Head is not visible in the camera! (Violation)');
                             noFaceTimerRef.current = null;
                         }, NO_FACE_TIMEOUT_MS);
                     }
                     return;
                 }
 
-                // Face detected — clear no-face timer
+                // Head is visible — clear no-face timer
                 if (noFaceTimerRef.current) {
                     clearTimeout(noFaceTimerRef.current);
                     noFaceTimerRef.current = null;
                 }
 
-                // Multiple faces detected — violation
-                if (detections.length > 1) {
-                    triggerViolation(`Multiple faces detected (${detections.length})! Only one person allowed.`);
+                // 2. TWO OR MORE MEMBERS PRESENT
+                if (detections.length >= 2) {
+                    triggerViolation(`Two or more members detected (${detections.length} people)! Only 1 candidate allowed.`);
                     return;
                 }
 
-                // Analyze head pose using landmarks of the single face
+                // 3. SLIGHT HEAD TURN LEFT / RIGHT
                 const detection = detections[0];
                 const landmarks = detection.landmarks;
                 const positions = landmarks.positions;
 
-                // Key landmark points for head pose estimation
+                // Key landmark points
                 const nose = positions[30];      // Nose tip
                 const leftEye = positions[36];    // Left eye outer corner
                 const rightEye = positions[45];   // Right eye outer corner
-                const chin = positions[8];        // Chin bottom
 
-                // Calculate face width and nose offset for yaw estimation
+                // Calculate face width & nose center offset for yaw ratio
                 const faceWidth = rightEye.x - leftEye.x;
                 const faceCenterX = (leftEye.x + rightEye.x) / 2;
                 const noseOffsetX = nose.x - faceCenterX;
 
-                // Yaw ratio: how far the nose is off-center relative to face width
-                const yawRatio = noseOffsetX / faceWidth;
+                // Yaw ratio: how far the nose is turned relative to face width
+                const yawRatio = faceWidth > 0 ? (noseOffsetX / faceWidth) : 0;
 
-                // Check if looking down: nose tip is significantly below eye line
-                const eyeLineY = (leftEye.y + rightEye.y) / 2;
-                const noseDropRatio = (nose.y - eyeLineY) / faceWidth;
-                const isLookingDown = noseDropRatio > 0.55;
+                // High sensitivity head turn check (slight left or right)
+                if (Math.abs(yawRatio) > YAW_THRESHOLD) {
+                    const direction = yawRatio > 0 ? 'Right' : 'Left';
+                    triggerViolation(`Head turned ${direction}! Please look straight at the screen.`);
+                    return;
+                }
 
-                // Determine if head is turned too far left or right
-                if (Math.abs(yawRatio) > YAW_THRESHOLD && !isLookingDown) {
-                    const direction = yawRatio > 0 ? 'right' : 'left';
-                    triggerViolation(`Head turned ${direction}! Please face the screen.`);
-                } else {
-                    // All good
-                    if (violationCountRef.current < MAX_VIOLATIONS) {
-                        setStatus('monitoring');
-                        setWarningMessage('');
-                    }
+                // Normal monitoring state
+                if (violationCountRef.current < MAX_VIOLATIONS && status !== 'violation') {
+                    setStatus('monitoring');
+                    setWarningMessage('');
                 }
             } catch (err) {
-                console.error('Face detection error:', err);
+                console.warn('Face detection cycle error:', err);
             }
         };
 
@@ -186,7 +205,7 @@ function FaceMonitor({ onViolation, onTerminate, active }) {
             if (intervalRef.current) clearInterval(intervalRef.current);
             if (noFaceTimerRef.current) clearTimeout(noFaceTimerRef.current);
         };
-    }, [cameraReady, active, triggerViolation]);
+    }, [cameraReady, active, triggerViolation, status]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -213,15 +232,15 @@ function FaceMonitor({ onViolation, onTerminate, active }) {
         monitoring: '#10b981',
         warning: '#f59e0b',
         violation: '#ef4444',
-        'no-face': '#f59e0b'
+        'no-face': '#ef4444'
     };
 
     const statusLabels = {
-        loading: 'Loading...',
-        monitoring: 'Monitoring',
+        loading: 'Loading Camera...',
+        monitoring: 'Camera Active',
         warning: 'Warning',
         violation: `Violation ${violationCount}/${MAX_VIOLATIONS}`,
-        'no-face': 'Face Not Detected'
+        'no-face': 'Head Not Visible'
     };
 
     return (
@@ -250,6 +269,8 @@ function FaceMonitor({ onViolation, onTerminate, active }) {
                     }}>
                         {status === 'monitoring' ? (
                             <FaCheckCircle style={{ marginRight: '0.3rem', fontSize: '0.65rem' }} />
+                        ) : status === 'no-face' ? (
+                            <FaUserSlash style={{ marginRight: '0.3rem', fontSize: '0.65rem' }} />
                         ) : (
                             <FaExclamationTriangle style={{ marginRight: '0.3rem', fontSize: '0.65rem' }} />
                         )}
@@ -267,12 +288,12 @@ function FaceMonitor({ onViolation, onTerminate, active }) {
 
             {/* Warning Banner */}
             {warningMessage && (
-                <div className={`face-monitor-warning ${status === 'violation' ? 'face-monitor-warning-danger' : 'face-monitor-warning-caution'}`}>
+                <div className={`face-monitor-warning ${status === 'violation' || status === 'no-face' ? 'face-monitor-warning-danger' : 'face-monitor-warning-caution'}`}>
                     <FaExclamationTriangle style={{ marginRight: '0.5rem', flexShrink: 0 }} />
                     <span>{warningMessage}</span>
                     {violationCount > 0 && (
                         <span className="face-monitor-warning-count">
-                            Warning {violationCount} of {MAX_VIOLATIONS}
+                            Violation {violationCount} of {MAX_VIOLATIONS}
                         </span>
                     )}
                 </div>

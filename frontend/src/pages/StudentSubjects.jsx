@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    FaBookOpen, FaSearch, FaChevronRight
+    FaBookOpen, FaFolderOpen, FaSearch, FaCode,
+    FaBrain, FaChevronRight, FaVideo, FaGraduationCap
 } from 'react-icons/fa';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { subjectAPI } from '../services/api';
@@ -26,10 +27,20 @@ function StudentSubjects() {
         (s.category || '').toLowerCase().includes(search.toLowerCase())
     );
 
-    const getCatClass = (cat) => {
-        if (cat === 'programming') return 'programming';
-        if (cat === 'aptitude') return 'aptitude';
+    const getCatClass = (cat = '') => {
+        const c = cat.toLowerCase();
+        if (c.includes('prog')) return 'programming';
+        if (c.includes('apt')) return 'aptitude';
+        if (c.includes('theo')) return 'theory';
         return 'default';
+    };
+
+    const getCatIcon = (cat = '') => {
+        const c = cat.toLowerCase();
+        if (c.includes('prog')) return <FaCode />;
+        if (c.includes('apt')) return <FaBrain />;
+        if (c.includes('theo')) return <FaBookOpen />;
+        return <FaGraduationCap />;
     };
 
     if (loading) return <LoadingSpinner />;
@@ -42,7 +53,7 @@ function StudentSubjects() {
                     <div className="ss-hero-icon"><FaBookOpen /></div>
                     <div className="ss-hero-text">
                         <h1>Subjects</h1>
-                        <p>Browse subjects and access study materials</p>
+                        <p>Explore your academic subjects, notes, and video lectures</p>
                     </div>
                     <div className="ss-search-wrap">
                         <FaSearch className="ss-search-icon" />
@@ -55,41 +66,65 @@ function StudentSubjects() {
                 </div>
             </div>
 
-            {/* Subject Grid */}
+            {/* Subject Content */}
             <div className="ss-content">
-                <p className="ss-count">{filtered.length} subject{filtered.length !== 1 ? 's' : ''}</p>
+                <p className="ss-count">{filtered.length} subject{filtered.length !== 1 ? 's' : ''} available</p>
 
                 {filtered.length === 0 ? (
-                    <div className="ss-empty">No subjects found.</div>
+                    <div className="ss-empty">No subjects match your search.</div>
                 ) : (
-                    <div className="ss-grid">
-                        {filtered.map((s, i) => (
-                            <div className="ss-card" key={s._id} style={{ animationDelay: `${i * 0.04}s` }}>
-                                <div className="ss-card-body">
-                                    <div className="ss-card-top">
-                                        <span className={`ss-cat-badge ${getCatClass(s.category)}`}>
-                                            {s.category}
+                    <div className="ss-subjects-grid">
+                        {filtered.map((subject, i) => {
+                            const catClass = getCatClass(subject.category);
+                            return (
+                                <div
+                                    key={subject._id}
+                                    className={`ss-subject-card cat-${catClass}`}
+                                    style={{ animationDelay: `${i * 0.04}s` }}
+                                >
+                                    {/* Top colorful accent bar */}
+                                    <div className={`ss-card-accent ${catClass}`} />
+
+                                    {/* Card Header with Badges */}
+                                    <div className="ss-card-badges">
+                                        <span className={`ss-cat-badge ${catClass}`}>
+                                            {getCatIcon(subject.category)} {subject.category || 'General'}
                                         </span>
-                                        {s.code && <span className="ss-code">{s.code}</span>}
+                                        <span className="ss-badge active-status">
+                                            <span className="ss-dot" /> ACTIVE
+                                        </span>
+                                        {subject.code && (
+                                            <span className="ss-code-badge">{subject.code}</span>
+                                        )}
                                     </div>
 
-                                    <h3 className="ss-card-name">{s.name}</h3>
-                                    <p className="ss-card-desc">{s.description || 'No description provided.'}</p>
+                                    {/* Subject Title & Description */}
+                                    <h3 className="ss-subject-name">{subject.name}</h3>
+                                    <p className="ss-subject-desc">{subject.description || 'Access notes, presentations, and recorded video lectures.'}</p>
 
+                                    {/* Quick Info Tags */}
+                                    <div className="ss-card-meta">
+                                        <span className="ss-meta-item">
+                                            <FaFolderOpen /> Study Notes
+                                        </span>
+                                        <span className="ss-meta-item">
+                                            <FaVideo /> Video Lectures
+                                        </span>
+                                    </div>
+
+                                    {/* Action Button */}
                                     <div className="ss-card-footer">
-                                        <span className="ss-footer-pill">Active</span>
                                         <button
-                                            className="ss-mat-btn"
-                                            onClick={() => navigate(`/student/materials/${encodeURIComponent(s.name)}`)}
+                                            className="ss-notes-btn"
+                                            onClick={() => navigate(`/student/materials/${encodeURIComponent(subject.name)}`)}
                                         >
-                                            <FaBookOpen className="ss-mat-btn-icon" />
-                                            View Materials
-                                            <FaChevronRight className="ss-mat-btn-arrow" />
+                                            <FaFolderOpen /> View Notes & Materials
+                                            <FaChevronRight className="ss-arrow-icon" />
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>

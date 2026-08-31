@@ -114,33 +114,33 @@ function StudentDashboard() {
             {/* ── KPI Stats ── */}
             <div className="sd-stats-wrap">
                 <div className="sd-stats-grid">
-                    <div className="sd-stat">
-                        <div className="sd-stat-icon"><FaBookOpen /></div>
+                    <div className="sd-stat blue">
+                        <div className="sd-stat-icon blue"><FaBookOpen /></div>
                         <div className="sd-stat-value">{subjects.length}</div>
                         <p className="sd-stat-label">Subjects</p>
                     </div>
-                    <div className="sd-stat">
-                        <div className="sd-stat-icon"><FaClipboardList /></div>
+                    <div className="sd-stat indigo">
+                        <div className="sd-stat-icon indigo"><FaClipboardList /></div>
                         <div className="sd-stat-value">{exams.length}</div>
                         <p className="sd-stat-label">Active Exams</p>
                     </div>
-                    <div className="sd-stat">
-                        <div className="sd-stat-icon"><FaChartLine /></div>
+                    <div className="sd-stat amber">
+                        <div className="sd-stat-icon amber"><FaChartLine /></div>
                         <div className="sd-stat-value">{avgScore}%</div>
                         <p className="sd-stat-label">Avg Score</p>
                     </div>
-                    <div className="sd-stat">
-                        <div className="sd-stat-icon"><FaCheckCircle /></div>
+                    <div className="sd-stat emerald">
+                        <div className="sd-stat-icon emerald"><FaCheckCircle /></div>
                         <div className="sd-stat-value">{passRate}%</div>
                         <p className="sd-stat-label">Pass Rate</p>
                     </div>
-                    <div className="sd-stat">
-                        <div className="sd-stat-icon"><FaStar /></div>
+                    <div className="sd-stat purple">
+                        <div className="sd-stat-icon purple"><FaStar /></div>
                         <div className="sd-stat-value">{bestScore}%</div>
                         <p className="sd-stat-label">Best Score</p>
                     </div>
-                    <div className="sd-stat">
-                        <div className="sd-stat-icon"><FaFire /></div>
+                    <div className="sd-stat rose">
+                        <div className="sd-stat-icon rose"><FaFire /></div>
                         <div className="sd-stat-value">{totalAttempts}</div>
                         <p className="sd-stat-label">Attempts</p>
                     </div>
