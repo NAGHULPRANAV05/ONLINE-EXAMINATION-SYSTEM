@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import { GoogleLogin } from '@react-oauth/google';
 import {
     FaGraduationCap, FaEnvelope, FaLock,
     FaExclamationCircle, FaEye, FaEyeSlash, FaShieldAlt
@@ -12,6 +13,7 @@ function Login() {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [focusedField, setFocusedField] = useState('');
 
@@ -35,6 +37,26 @@ function Login() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setError('');
+        setGoogleLoading(true);
+        try {
+            const response = await authAPI.googleAuth(credentialResponse.credential);
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            navigate(user.role === 'admin' ? '/admin/dashboard' : '/student/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Google sign-in failed. Please try again.');
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
+    const handleGoogleError = () => {
+        setError('Google sign-in was cancelled or failed. Please try again.');
     };
 
     return (
@@ -132,6 +154,32 @@ function Login() {
                             )}
                         </button>
                     </form>
+
+                    {/* Divider */}
+                    <div className="lp-divider">
+                        <span>or continue with</span>
+                    </div>
+
+                    {/* Google SSO Button (Placed below sign in) */}
+                    <div className="lp-google-wrap">
+                        {googleLoading ? (
+                            <div className="lp-google-loading">
+                                <span className="lp-spinner lp-spinner-dark" />
+                                <span>Signing in with Google…</span>
+                            </div>
+                        ) : (
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={handleGoogleError}
+                                useOneTap={false}
+                                theme="outline"
+                                size="large"
+                                width="100%"
+                                text="signin_with"
+                                shape="rectangular"
+                            />
+                        )}
+                    </div>
 
                     {/* Footer */}
                     <p className="lp-footer">

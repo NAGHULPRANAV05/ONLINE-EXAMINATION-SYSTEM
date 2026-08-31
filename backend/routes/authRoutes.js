@@ -4,12 +4,13 @@ const {
     register, login, getMe,
     getAllStudents, toggleBlockStudent,
     createStudent, deleteStudent,
-    updateStudentPassword
+    updateStudentPassword, googleAuth
 } = require('../controllers/authController');
 const { protect, requireAdmin } = require('../middleware/authMiddleware');
 
 router.post('/register', register);
 router.post('/login', login);
+router.post('/google', googleAuth);
 router.get('/me', protect, getMe);
 
 // Admin Student Management (CRUD, Blocking & Password Reset)

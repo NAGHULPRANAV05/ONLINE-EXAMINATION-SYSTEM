@@ -9,6 +9,7 @@
     },
     "dependencies": {
         "@monaco-editor/react": "^4.6.0",
+        "@react-oauth/google": "^0.13.5",
         "axios": "^1.5.1",
         "face-api.js": "^0.22.2",
         "react": "^18.2.0",

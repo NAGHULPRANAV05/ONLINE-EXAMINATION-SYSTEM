@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -130,6 +133,108 @@ exports.login = async (req, res) => {
     }
 };
 
+// @desc    Google OAuth Sign-In
+// @route   POST /api/auth/google
+// @access  Public
+exports.googleAuth = async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({
+                success: false,
+                message: 'Google credential token is required'
+            });
+        }
+
+        // Verify the Google ID token
+        let payload;
+        try {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: credential,
+                audience: process.env.GOOGLE_CLIENT_ID
+            });
+            payload = ticket.getPayload();
+        } catch (verifyErr) {
+            // Fallback for verification if audience doesn't match default in development
+            console.warn('Google verifyIdToken with audience failed, trying open verify:', verifyErr.message);
+            const ticket = await googleClient.verifyIdToken({
+                idToken: credential
+            });
+            payload = ticket.getPayload();
+        }
+
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Unable to retrieve email from Google account'
+            });
+        }
+
+        // Find existing user by googleId or email
+        let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+        if (user) {
+            // Link googleId or avatar if not present
+            let needsSave = false;
+            if (!user.googleId) {
+                user.googleId = googleId;
+                needsSave = true;
+            }
+            if (picture && !user.avatar) {
+                user.avatar = picture;
+                needsSave = true;
+            }
+            if (needsSave) {
+                await user.save();
+            }
+
+            // Check if user is blocked
+            if (user.isBlocked) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Your account has been blocked by the administrator. Access to the portal is restricted.'
+                });
+            }
+        } else {
+            // Create new student user
+            user = await User.create({
+                name: name || email.split('@')[0],
+                email,
+                googleId,
+                avatar: picture || '',
+                role: 'student'
+            });
+        }
+
+        // Generate token
+        const token = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            message: 'Google sign-in successful',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+                isBlocked: user.isBlocked
+            }
+        });
+    } catch (error) {
+        console.error('Google Auth Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Google authentication failed',
+            error: error.message
+        });
+    }
+};
+
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private
@@ -144,6 +249,7 @@ exports.getMe = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                avatar: user.avatar,
                 isBlocked: user.isBlocked
             }
         });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import { GoogleLogin } from '@react-oauth/google';
 import { FaGraduationCap } from 'react-icons/fa';
 
 function Register() {
@@ -14,6 +15,7 @@ function Register() {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormData({
@@ -40,8 +42,15 @@ function Register() {
 
         try {
             const { confirmPassword, ...registerData } = formData;
-            await authAPI.register(registerData);
-            navigate('/login');
+            const response = await authAPI.register(registerData);
+            const { token, user } = response.data;
+            if (token && user) {
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(user));
+                navigate(user.role === 'admin' ? '/admin/dashboard' : '/student/dashboard');
+            } else {
+                navigate('/login');
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
         } finally {
@@ -49,10 +58,32 @@ function Register() {
         }
     };
 
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setError('');
+        setGoogleLoading(true);
+        try {
+            const response = await authAPI.googleAuth(credentialResponse.credential);
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            navigate(user.role === 'admin' ? '/admin/dashboard' : '/student/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Google sign-up failed. Please try again.');
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
+    const handleGoogleError = () => {
+        setError('Google sign-up was cancelled or failed. Please try again.');
+    };
+
     return (
         <div style={styles.container}>
             <div style={styles.card}>
-                <h1 style={styles.title}><FaGraduationCap style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} /> Exam Portal</h1>
+                <h1 style={styles.title}>
+                    <FaGraduationCap style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} /> Exam Portal
+                </h1>
                 <h2 style={styles.subtitle}>Register</h2>
 
                 {error && <div style={styles.error}>{error}</div>}
@@ -124,6 +155,29 @@ function Register() {
                     </button>
                 </form>
 
+                <div style={styles.divider}>
+                    <span style={styles.dividerLine}></span>
+                    <span style={styles.dividerText}>or continue with</span>
+                    <span style={styles.dividerLine}></span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.75rem' }}>
+                    {googleLoading ? (
+                        <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Setting up with Google...</div>
+                    ) : (
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={handleGoogleError}
+                            useOneTap={false}
+                            theme="outline"
+                            size="large"
+                            width="100%"
+                            text="signup_with"
+                            shape="rectangular"
+                        />
+                    )}
+                </div>
+
                 <p style={styles.footer}>
                     Already have an account? <Link to="/login" style={styles.link}>Login</Link>
                 </p>
@@ -167,6 +221,23 @@ const styles = {
         borderRadius: '0.5rem',
         marginBottom: '1rem',
         border: '1px solid #fecaca'
+    },
+    divider: {
+        display: 'flex',
+        alignItems: 'center',
+        margin: '1.25rem 0 0.5rem',
+        color: '#94a3b8'
+    },
+    dividerLine: {
+        flex: 1,
+        height: '1px',
+        background: '#e2e8f0'
+    },
+    dividerText: {
+        padding: '0 0.75rem',
+        fontSize: '0.75rem',
+        textTransform: 'uppercase',
+        fontWeight: 500
     },
     footer: {
         textAlign: 'center',
