@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaGraduationCap, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 import './Navbar.css';
@@ -9,6 +9,10 @@ function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = user.role === 'admin';
+
+    const navRef = useRef(null);
+    const itemRefs = useRef({});
+    const [pillStyle, setPillStyle] = useState({ left: 4, width: 0, opacity: 0 });
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -30,6 +34,38 @@ function Navbar() {
 
     const links = isAdmin ? adminLinks : studentLinks;
 
+    // Find active link
+    const activeLink = links.find(link => {
+        if (link.to === '/admin/dashboard' || link.to === '/student/dashboard') {
+            return location.pathname === link.to;
+        }
+        return location.pathname === link.to || location.pathname.startsWith(link.to);
+    })?.to || links[0]?.to;
+
+    const movePillTo = (linkTo) => {
+        const el = itemRefs.current[linkTo];
+        const nav = navRef.current;
+        if (el && nav) {
+            const navRect = nav.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            setPillStyle({
+                left: elRect.left - navRect.left,
+                width: elRect.width,
+                opacity: 1
+            });
+        }
+    };
+
+    // Snap pill to active on route change
+    useEffect(() => {
+        const timer = setTimeout(() => movePillTo(activeLink), 20);
+        window.addEventListener('resize', () => movePillTo(activeLink));
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('resize', () => movePillTo(activeLink));
+        };
+    }, [activeLink, location.pathname]);
+
     return (
         <header className="navbar-wrapper">
             <nav className="navbar-container">
@@ -43,19 +79,30 @@ function Navbar() {
                     </div>
                 </Link>
 
-                {/* Center Navigation Links */}
-                <div className="navbar-nav">
+                {/* === Stationary Capsule Track with Liquid Water Pill === */}
+                <div className="navbar-nav" ref={navRef}>
+                    {/* Liquid pill — moves purely inside the fixed track */}
+                    <span
+                        className="nav-liquid-pill"
+                        style={{
+                            left: pillStyle.left,
+                            width: pillStyle.width,
+                            opacity: pillStyle.opacity
+                        }}
+                    />
+
                     {links.map((link) => {
-                        const isActive = location.pathname === link.to ||
-                            (link.to !== '/admin/dashboard' && link.to !== '/student/dashboard' && location.pathname.startsWith(link.to));
+                        const isActive = link.to === activeLink;
                         return (
                             <Link
                                 key={link.to}
                                 to={link.to}
+                                ref={(el) => { itemRefs.current[link.to] = el; }}
                                 className={`nav-item ${isActive ? 'active' : ''}`}
+                                onMouseEnter={() => movePillTo(link.to)}
+                                onMouseLeave={() => movePillTo(activeLink)}
                             >
-                                <span className="nav-item-label">{link.label}</span>
-                                {isActive && <span className="nav-active-pill" />}
+                                {link.label}
                             </Link>
                         );
                     })}
@@ -77,16 +124,11 @@ function Navbar() {
 
                     <div className="navbar-divider" />
 
-                    <button
-                        onClick={handleLogout}
-                        className="navbar-signout-btn"
-                        title="Sign Out"
-                    >
+                    <button onClick={handleLogout} className="navbar-signout-btn" title="Sign Out">
                         <FaSignOutAlt className="signout-icon" />
                         <span>Logout</span>
                     </button>
 
-                    {/* Mobile Hamburger Toggle */}
                     <button
                         className="mobile-menu-trigger"
                         onClick={() => setMobileOpen(!mobileOpen)}
@@ -113,17 +155,14 @@ function Navbar() {
                                     <span className="user-role-tag">{isAdmin ? 'Admin' : 'Student'}</span>
                                 </div>
                             </div>
-                            <button
-                                className="mobile-close-btn"
-                                onClick={() => setMobileOpen(false)}
-                            >
+                            <button className="mobile-close-btn" onClick={() => setMobileOpen(false)}>
                                 <FaTimes />
                             </button>
                         </div>
 
                         <div className="mobile-nav-links">
                             {links.map((link) => {
-                                const isActive = location.pathname === link.to;
+                                const isActive = link.to === activeLink;
                                 return (
                                     <Link
                                         key={link.to}
@@ -131,7 +170,7 @@ function Navbar() {
                                         className={`mobile-nav-item ${isActive ? 'active' : ''}`}
                                         onClick={() => setMobileOpen(false)}
                                     >
-                                        <span>{link.label}</span>
+                                        {link.label}
                                     </Link>
                                 );
                             })}
