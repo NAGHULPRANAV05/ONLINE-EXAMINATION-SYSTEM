@@ -1,0 +1,328 @@
+/* =============================================
+   Student Materials Dedicated Page
+   ============================================= */
+
+.smp-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding-bottom: 3.5rem;
+}
+
+/* ── Hero Banner ── */
+.smp-hero {
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  padding: 2rem 0;
+}
+
+.smp-hero-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.smp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color 0.15s ease;
+  width: fit-content;
+}
+
+.smp-back-btn:hover {
+  color: #ffffff;
+}
+
+.smp-hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.smp-hero-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.smp-hero-text h1 {
+  color: #ffffff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0 0 0.2rem;
+  letter-spacing: -0.02em;
+}
+
+.smp-hero-text p {
+  color: #94a3b8;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.smp-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  max-width: 380px;
+  transition: border-color 0.2s ease;
+}
+
+.smp-search-wrap:focus-within {
+  border-color: #2563eb;
+}
+
+.smp-search-icon {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.smp-search-wrap input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.88rem;
+  width: 100%;
+  font-family: inherit;
+}
+
+.smp-search-wrap input::placeholder {
+  color: #64748b;
+}
+
+/* ── Content ── */
+.smp-content {
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  padding: 0 1.75rem;
+}
+
+.smp-empty {
+  text-align: center;
+  padding: 4.5rem 2rem;
+  color: #64748b;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px dashed #cbd5e1;
+}
+
+.smp-empty-icon {
+  font-size: 2.75rem;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.smp-empty h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.35rem;
+}
+
+.smp-empty p {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.smp-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.smp-empty-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ── 3-Column Square Grid ── */
+.smp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+/* ── Card ── */
+.smp-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  animation: smpCardIn 0.35s ease both;
+}
+
+.smp-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+  transform: translateY(-2px);
+}
+
+.smp-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.smp-icon {
+  font-size: 1.65rem;
+  color: #2563eb;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.smp-header-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.smp-badge {
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  width: fit-content;
+}
+
+.smp-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.smp-desc {
+  font-size: 0.83rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 0.85rem;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Video embed */
+.smp-video-wrap {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  margin-bottom: 0.85rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000000;
+}
+
+.smp-video-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Card footer */
+.smp-card-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.smp-btn-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.smp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  border: none;
+  width: 100%;
+}
+
+.smp-btn.primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.smp-btn.primary:hover {
+  background: #1d4ed8;
+}
+
+.smp-btn.secondary {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.smp-btn.secondary:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+@keyframes smpCardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .smp-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .smp-grid { grid-template-columns: 1fr; }
+}

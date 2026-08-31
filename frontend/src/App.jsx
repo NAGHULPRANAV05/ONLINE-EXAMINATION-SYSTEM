@@ -2,6 +2,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import StudentDashboard from './pages/StudentDashboard';
+import StudentSubjects from './pages/StudentSubjects';
+import StudentExams from './pages/StudentExams';
+import StudentResultsPage from './pages/StudentResultsPage';
+import StudentMaterialsPage from './pages/StudentMaterialsPage';
 import ExamInterface from './pages/ExamInterface';
 import ResultView from './pages/ResultView';
 import AdminDashboard from './pages/AdminDashboard';
@@ -37,6 +41,38 @@ function App() {
                     element={
                         <ProtectedRoute role="student">
                             <StudentDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/student/subjects"
+                    element={
+                        <ProtectedRoute role="student">
+                            <StudentSubjects />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/student/materials/:subjectName"
+                    element={
+                        <ProtectedRoute role="student">
+                            <StudentMaterialsPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/student/exams"
+                    element={
+                        <ProtectedRoute role="student">
+                            <StudentExams />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/student/results"
+                    element={
+                        <ProtectedRoute role="student">
+                            <StudentResultsPage />
                         </ProtectedRoute>
                     }
                 />

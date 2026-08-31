@@ -121,8 +121,15 @@
 }
 
 @keyframes pulseCrit {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .btn-apt-submit {
@@ -493,9 +500,20 @@
   margin-bottom: 0.05rem;
 }
 
-.chip.answered { background: var(--apt-success-bg); color: var(--apt-success); }
-.chip.not-answered { background: #f1f5f9; color: var(--apt-text-muted); }
-.chip.flagged { background: var(--apt-purple-bg); color: var(--apt-purple); }
+.chip.answered {
+  background: var(--apt-success-bg);
+  color: var(--apt-success);
+}
+
+.chip.not-answered {
+  background: #f1f5f9;
+  color: var(--apt-text-muted);
+}
+
+.chip.flagged {
+  background: var(--apt-purple-bg);
+  color: var(--apt-purple);
+}
 
 .palette-matrix {
   display: grid;
@@ -999,9 +1017,21 @@
   border-color: #fca5a5;
 }
 
-.pill-icon.pass { color: #16a34a; font-size: 0.68rem; }
-.pill-icon.fail { color: #dc2626; font-size: 0.68rem; }
-.pill-lock-icon { color: #64748b; font-size: 0.65rem; margin-left: 2px; }
+.pill-icon.pass {
+  color: #16a34a;
+  font-size: 0.68rem;
+}
+
+.pill-icon.fail {
+  color: #dc2626;
+  font-size: 0.68rem;
+}
+
+.pill-lock-icon {
+  color: #64748b;
+  font-size: 0.65rem;
+  margin-left: 2px;
+}
 
 .console-score-badge {
   font-size: 0.68rem;
@@ -1267,9 +1297,17 @@
   text-transform: uppercase;
 }
 
-.summary-item.answered .summary-number { color: var(--apt-success); }
-.summary-item.unanswered .summary-number { color: var(--apt-danger); }
-.summary-item.flagged .summary-number { color: var(--apt-purple); }
+.summary-item.answered .summary-number {
+  color: var(--apt-success);
+}
+
+.summary-item.unanswered .summary-number {
+  color: var(--apt-danger);
+}
+
+.summary-item.flagged .summary-number {
+  color: var(--apt-purple);
+}
 
 .unanswered-warning {
   display: flex;
@@ -1446,7 +1484,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ==========================================================================

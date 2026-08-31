@@ -29,18 +29,35 @@ function Navbar() {
     ];
 
     const studentLinks = [
-        { to: '/student/dashboard', label: 'Dashboard' },
+        { to: '/student/dashboard',  label: 'Dashboard' },
+        { to: '/student/subjects',   label: 'Subjects' },
+        { to: '/student/exams',      label: 'Available Exams' },
+        { to: '/student/results',    label: 'My Results' },
     ];
 
     const links = isAdmin ? adminLinks : studentLinks;
 
     // Find active link
-    const activeLink = links.find(link => {
-        if (link.to === '/admin/dashboard' || link.to === '/student/dashboard') {
-            return location.pathname === link.to;
+    const activeLink = (() => {
+        const path = location.pathname;
+
+        // Custom subpage mappings
+        if (path.startsWith('/student/materials')) {
+            return '/student/subjects';
         }
-        return location.pathname === link.to || location.pathname.startsWith(link.to);
-    })?.to || links[0]?.to;
+        if (path.startsWith('/student/result/')) {
+            return '/student/results';
+        }
+
+        const found = links.find(link => {
+            if (link.to === '/admin/dashboard' || link.to === '/student/dashboard') {
+                return path === link.to;
+            }
+            return path === link.to || path.startsWith(link.to);
+        });
+
+        return found ? found.to : links[0]?.to;
+    })();
 
     const movePillTo = (linkTo) => {
         const el = itemRefs.current[linkTo];

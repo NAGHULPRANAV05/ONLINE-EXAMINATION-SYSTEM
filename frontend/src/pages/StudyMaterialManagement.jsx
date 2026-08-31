@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { materialAPI } from '../services/api';
-import { FaFileAlt, FaUpload, FaEdit, FaTrash, FaFilePdf, FaFileWord, FaFilePowerpoint, FaFileArchive, FaTimes, FaPlus } from 'react-icons/fa';
+import {
+    FaFileAlt, FaUpload, FaEdit, FaTrash, FaFilePdf,
+    FaFileWord, FaFilePowerpoint, FaFileArchive, FaTimes,
+    FaPlus, FaYoutube, FaLink
+} from 'react-icons/fa';
 
 function StudyMaterialManagement() {
     const [materials, setMaterials] = useState([]);
@@ -16,6 +20,8 @@ function StudyMaterialManagement() {
         subjectName: '',
         department: '',
         yearSemester: '',
+        materialType: 'file', // 'file' | 'link'
+        youtubeUrl: '',
         file: null
     });
 
@@ -26,7 +32,7 @@ function StudyMaterialManagement() {
     const fetchMaterials = async () => {
         try {
             const res = await materialAPI.getAll();
-            setMaterials(res.data.materials);
+            setMaterials(res.data.materials || []);
         } catch (err) {
             console.error('Error fetching materials:', err);
         } finally {
@@ -35,7 +41,16 @@ function StudyMaterialManagement() {
     };
 
     const resetForm = () => {
-        setFormData({ title: '', description: '', subjectName: '', department: '', yearSemester: '', file: null });
+        setFormData({
+            title: '',
+            description: '',
+            subjectName: '',
+            department: '',
+            yearSemester: '',
+            materialType: 'file',
+            youtubeUrl: '',
+            file: null
+        });
         setEditingMaterial(null);
         setError('');
     };
@@ -47,11 +62,13 @@ function StudyMaterialManagement() {
 
     const openEditModal = (material) => {
         setFormData({
-            title: material.title,
-            description: material.description,
-            subjectName: material.subjectName,
-            department: material.department,
-            yearSemester: material.yearSemester,
+            title: material.title || '',
+            description: material.description || '',
+            subjectName: material.subjectName || '',
+            department: material.department || '',
+            yearSemester: material.yearSemester || '',
+            materialType: material.materialType || 'file',
+            youtubeUrl: material.youtubeUrl || '',
             file: null
         });
         setEditingMaterial(material);
@@ -70,18 +87,28 @@ function StudyMaterialManagement() {
             data.append('subjectName', formData.subjectName);
             data.append('department', formData.department);
             data.append('yearSemester', formData.yearSemester);
-            if (formData.file) {
-                data.append('file', formData.file);
+            data.append('materialType', formData.materialType);
+
+            if (formData.materialType === 'link') {
+                if (!formData.youtubeUrl) {
+                    setError('Please enter a YouTube video URL');
+                    setSubmitting(false);
+                    return;
+                }
+                data.append('youtubeUrl', formData.youtubeUrl);
+            } else {
+                if (formData.file) {
+                    data.append('file', formData.file);
+                } else if (!editingMaterial) {
+                    setError('Please select a file to upload');
+                    setSubmitting(false);
+                    return;
+                }
             }
 
             if (editingMaterial) {
                 await materialAPI.update(editingMaterial._id, data);
             } else {
-                if (!formData.file) {
-                    setError('Please select a file to upload');
-                    setSubmitting(false);
-                    return;
-                }
                 await materialAPI.upload(data);
             }
 
@@ -105,8 +132,11 @@ function StudyMaterialManagement() {
         }
     };
 
-    const getFileIcon = (type) => {
-        switch (type) {
+    const getFileIcon = (material) => {
+        if (material.materialType === 'link' || material.youtubeUrl || material.fileType === 'youtube') {
+            return <FaYoutube style={{ color: '#ef4444' }} />;
+        }
+        switch (material.fileType) {
             case 'pdf': return <FaFilePdf style={{ color: '#ef4444' }} />;
             case 'doc': case 'docx': return <FaFileWord style={{ color: '#2563eb' }} />;
             case 'ppt': case 'pptx': return <FaFilePowerpoint style={{ color: '#f59e0b' }} />;
@@ -116,6 +146,7 @@ function StudyMaterialManagement() {
     };
 
     const formatFileSize = (bytes) => {
+        if (!bytes) return '—';
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / 1048576).toFixed(1) + ' MB';
@@ -129,10 +160,10 @@ function StudyMaterialManagement() {
                 <div className="flex items-center justify-between" style={{ marginBottom: '2rem' }}>
                     <div>
                         <h1><FaFileAlt style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} /> Study Materials</h1>
-                        <p style={{ color: '#64748b' }}>Upload and manage study materials for students.</p>
+                        <p style={{ color: '#64748b' }}>Upload and manage study materials and YouTube lectures for students.</p>
                     </div>
                     <button className="btn btn-primary" onClick={openCreateModal}>
-                        <FaPlus /> Upload Material
+                        <FaPlus /> Add Material
                     </button>
                 </div>
 
@@ -140,59 +171,64 @@ function StudyMaterialManagement() {
                     <div className="card text-center" style={{ padding: '3rem' }}>
                         <FaUpload style={{ fontSize: '3rem', color: '#94a3b8', marginBottom: '1rem' }} />
                         <h3>No materials uploaded yet</h3>
-                        <p style={{ color: '#64748b' }}>Click "Upload Material" to add your first study material.</p>
+                        <p style={{ color: '#64748b' }}>Click "Add Material" to upload your first study material or YouTube link.</p>
                     </div>
                 ) : (
                     <div style={{ overflowX: 'auto' }}>
                         <table className="table">
                             <thead>
                                 <tr>
-                                    <th>File</th>
+                                    <th>Type</th>
                                     <th>Title</th>
                                     <th>Subject</th>
                                     <th>Department</th>
                                     <th>Year/Sem</th>
-                                    <th>Size</th>
+                                    <th>Size / Link</th>
                                     <th>Uploaded</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {materials.map((material) => (
-                                    <tr key={material._id}>
-                                        <td style={{ fontSize: '1.25rem' }}>{getFileIcon(material.fileType)}</td>
-                                        <td>
-                                            <strong>{material.title}</strong>
-                                            <br />
-                                            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{material.fileName}</span>
-                                        </td>
-                                        <td><span className="badge badge-primary">{material.subjectName}</span></td>
-                                        <td>{material.department}</td>
-                                        <td>{material.yearSemester}</td>
-                                        <td>{formatFileSize(material.fileSize)}</td>
-                                        <td style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                                            {new Date(material.createdAt).toLocaleDateString()}
-                                        </td>
-                                        <td>
-                                            <div className="flex gap-sm">
-                                                <button
-                                                    className="btn btn-outline btn-sm"
-                                                    onClick={() => openEditModal(material)}
-                                                    title="Edit"
-                                                >
-                                                    <FaEdit />
-                                                </button>
-                                                <button
-                                                    className="btn btn-danger btn-sm"
-                                                    onClick={() => handleDelete(material._id)}
-                                                    title="Delete"
-                                                >
-                                                    <FaTrash />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {materials.map((material) => {
+                                    const isYT = material.materialType === 'link' || Boolean(material.youtubeUrl);
+                                    return (
+                                        <tr key={material._id}>
+                                            <td style={{ fontSize: '1.35rem' }}>{getFileIcon(material)}</td>
+                                            <td>
+                                                <strong>{material.title}</strong>
+                                                <br />
+                                                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                                    {isYT ? (material.youtubeUrl || 'YouTube Video') : (material.fileName || 'Document')}
+                                                </span>
+                                            </td>
+                                            <td><span className="badge badge-primary">{material.subjectName}</span></td>
+                                            <td>{material.department}</td>
+                                            <td>{material.yearSemester}</td>
+                                            <td>{isYT ? <span className="badge" style={{ background: '#fef2f2', color: '#dc2626' }}>Video</span> : formatFileSize(material.fileSize)}</td>
+                                            <td style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                                                {new Date(material.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td>
+                                                <div className="flex gap-sm">
+                                                    <button
+                                                        className="btn btn-outline btn-sm"
+                                                        onClick={() => openEditModal(material)}
+                                                        title="Edit"
+                                                    >
+                                                        <FaEdit />
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => handleDelete(material._id)}
+                                                        title="Delete"
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -202,10 +238,10 @@ function StudyMaterialManagement() {
             {/* Upload/Edit Modal */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '550px' }}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '560px' }}>
                         <div className="flex items-center justify-between" style={{ marginBottom: '1.5rem' }}>
                             <h2 style={{ marginBottom: 0 }}>
-                                {editingMaterial ? 'Edit Material' : 'Upload Material'}
+                                {editingMaterial ? 'Edit Material' : 'Add Study Material'}
                             </h2>
                             <button
                                 onClick={() => setShowModal(false)}
@@ -225,6 +261,29 @@ function StudyMaterialManagement() {
                         )}
 
                         <form onSubmit={handleSubmit}>
+                            {/* Material Type Selector */}
+                            <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                                <label className="form-label">Material Type</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                    <button
+                                        type="button"
+                                        className={`btn ${formData.materialType === 'file' ? 'btn-primary' : 'btn-outline'}`}
+                                        onClick={() => setFormData({ ...formData, materialType: 'file' })}
+                                        style={{ justifyContent: 'center' }}
+                                    >
+                                        <FaUpload /> Document File
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`btn ${formData.materialType === 'link' ? 'btn-primary' : 'btn-outline'}`}
+                                        onClick={() => setFormData({ ...formData, materialType: 'link' })}
+                                        style={{ justifyContent: 'center' }}
+                                    >
+                                        <FaYoutube /> YouTube Link
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="form-group">
                                 <label className="form-label">Title *</label>
                                 <input
@@ -232,7 +291,7 @@ function StudyMaterialManagement() {
                                     className="form-input"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    placeholder="e.g. Data Structures Notes Chapter 1"
+                                    placeholder="e.g. Clocks and Directions Lecture"
                                     required
                                 />
                             </div>
@@ -243,7 +302,7 @@ function StudyMaterialManagement() {
                                     className="form-textarea"
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Brief description of the material"
+                                    placeholder="Brief description or key topics covered"
                                     required
                                     style={{ minHeight: '80px' }}
                                 />
@@ -257,7 +316,7 @@ function StudyMaterialManagement() {
                                         className="form-input"
                                         value={formData.subjectName}
                                         onChange={(e) => setFormData({ ...formData, subjectName: e.target.value })}
-                                        placeholder="e.g. Data Structures"
+                                        placeholder="e.g. Aptitude"
                                         required
                                     />
                                 </div>
@@ -295,25 +354,44 @@ function StudyMaterialManagement() {
                                 </select>
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">
-                                    File {editingMaterial ? '(leave empty to keep current file)' : '*'}
-                                </label>
-                                <input
-                                    type="file"
-                                    className="form-input"
-                                    accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
-                                    onChange={(e) => setFormData({ ...formData, file: e.target.files[0] })}
-                                    style={{ padding: '0.5rem' }}
-                                />
-                                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                    Accepted: PDF, DOC, DOCX, PPT, PPTX, ZIP (max 50 MB)
-                                </span>
-                            </div>
+                            {formData.materialType === 'link' ? (
+                                <div className="form-group">
+                                    <label className="form-label">YouTube Video URL *</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <input
+                                            type="url"
+                                            className="form-input"
+                                            value={formData.youtubeUrl}
+                                            onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            required
+                                        />
+                                    </div>
+                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem', display: 'block' }}>
+                                        Paste any YouTube watch, short, or share link.
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="form-group">
+                                    <label className="form-label">
+                                        File {editingMaterial ? '(leave empty to keep current file)' : '*'}
+                                    </label>
+                                    <input
+                                        type="file"
+                                        className="form-input"
+                                        accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
+                                        onChange={(e) => setFormData({ ...formData, file: e.target.files[0] })}
+                                        style={{ padding: '0.5rem' }}
+                                    />
+                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem', display: 'block' }}>
+                                        Accepted: PDF, DOC, DOCX, PPT, PPTX, ZIP (max 50 MB)
+                                    </span>
+                                </div>
+                            )}
 
                             <div className="flex gap-sm" style={{ marginTop: '1.5rem' }}>
                                 <button type="submit" className="btn btn-primary" disabled={submitting} style={{ flex: 1 }}>
-                                    {submitting ? 'Uploading...' : (editingMaterial ? 'Update Material' : 'Upload Material')}
+                                    {submitting ? 'Saving...' : (editingMaterial ? 'Update Material' : 'Save Material')}
                                 </button>
                                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>
                                     Cancel
