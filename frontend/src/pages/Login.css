@@ -381,14 +381,22 @@
 .lp-google-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 0.1rem;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto 0.15rem;
 }
 
-.lp-google-wrap > div,
-.lp-google-wrap iframe,
-.lp-google-wrap [data-text] {
-  width: 100% !important;
+.lp-google-wrap > div {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 auto !important;
 }
+
+.lp-google-wrap iframe {
+  margin: 0 auto !important;
+}
+
 
 .lp-google-loading {
   display: flex;
