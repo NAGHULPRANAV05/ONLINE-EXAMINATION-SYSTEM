@@ -698,46 +698,27 @@ function StudentMonitoring() {
 
                         {/* Student Profile Overview Card */}
                         <div className={`sm-student-profile-card ${selectedStudent.isBlocked ? 'is-blocked-card' : ''}`}>
-                            <div className="profile-card-left">
-                                <div className={`profile-large-avatar ${selectedStudent.isBlocked ? 'blocked' : ''}`}>
-                                    {getInitials(selectedStudent.name)}
-                                </div>
-                                <div className="profile-info-block">
-                                    <div className="profile-name-row">
-                                        <h2 className="profile-name">{selectedStudent.name}</h2>
-                                        <span className={`sm-access-tag ${selectedStudent.isBlocked ? 'blocked' : 'active'}`}>
-                                            {selectedStudent.isBlocked ? (
-                                                <>
-                                                    <FaBan /> Blocked from Portal
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <FaCheckCircle /> Active Account
-                                                </>
-                                            )}
-                                        </span>
+                            <div className="profile-card-top">
+                                <div className="profile-card-identity">
+                                    <div className={`profile-large-avatar ${selectedStudent.isBlocked ? 'blocked' : ''}`}>
+                                        {getInitials(selectedStudent.name)}
                                     </div>
-                                    <p className="profile-email">{selectedStudent.email}</p>
-                                </div>
-                            </div>
-
-                            <div className="profile-card-right">
-                                <div className="profile-stats-cluster">
-                                    <div className="cluster-item">
-                                        <span className="cluster-val">{selectedStudent.examsCount}</span>
-                                        <span className="cluster-lbl">Exams Taken</span>
-                                    </div>
-                                    <div className="cluster-item">
-                                        <span className="cluster-val pass">{selectedStudent.passedCount}</span>
-                                        <span className="cluster-lbl">Passed</span>
-                                    </div>
-                                    <div className="cluster-item">
-                                        <span className="cluster-val fail">{selectedStudent.failedCount}</span>
-                                        <span className="cluster-lbl">Failed</span>
-                                    </div>
-                                    <div className="cluster-item highlight">
-                                        <span className="cluster-val">{selectedStudent.avgPercentage.toFixed(1)}%</span>
-                                        <span className="cluster-lbl">Avg Score</span>
+                                    <div className="profile-info-block">
+                                        <div className="profile-name-row">
+                                            <h2 className="profile-name">{selectedStudent.name}</h2>
+                                            <span className={`sm-access-tag ${selectedStudent.isBlocked ? 'blocked' : 'active'}`}>
+                                                {selectedStudent.isBlocked ? (
+                                                    <>
+                                                        <FaBan /> Blocked
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaCheckCircle /> Active
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+                                        <p className="profile-email">{selectedStudent.email}</p>
                                     </div>
                                 </div>
 
@@ -760,11 +741,11 @@ function StudentMonitoring() {
                                     >
                                         {selectedStudent.isBlocked ? (
                                             <>
-                                                <FaCheck /> <span>Unblock Access</span>
+                                                <FaCheck /> <span>Unblock</span>
                                             </>
                                         ) : (
                                             <>
-                                                <FaBan /> <span>Block Access</span>
+                                                <FaBan /> <span>Block</span>
                                             </>
                                         )}
                                     </button>
@@ -776,8 +757,27 @@ function StudentMonitoring() {
                                         title={`Delete ${selectedStudent.name}'s account`}
                                     >
                                         <FaTrash />
-                                        <span>Delete Student</span>
+                                        <span>Delete</span>
                                     </button>
+                                </div>
+                            </div>
+
+                            <div className="profile-stats-cluster">
+                                <div className="cluster-item">
+                                    <span className="cluster-val">{selectedStudent.examsCount}</span>
+                                    <span className="cluster-lbl">Exams Taken</span>
+                                </div>
+                                <div className="cluster-item">
+                                    <span className="cluster-val pass">{selectedStudent.passedCount}</span>
+                                    <span className="cluster-lbl">Passed</span>
+                                </div>
+                                <div className="cluster-item">
+                                    <span className="cluster-val fail">{selectedStudent.failedCount}</span>
+                                    <span className="cluster-lbl">Failed</span>
+                                </div>
+                                <div className="cluster-item highlight">
+                                    <span className="cluster-val">{selectedStudent.avgPercentage.toFixed(1)}%</span>
+                                    <span className="cluster-lbl">Avg Score</span>
                                 </div>
                             </div>
                         </div>

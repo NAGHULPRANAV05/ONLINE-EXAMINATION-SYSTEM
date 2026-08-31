@@ -726,28 +726,49 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
+.sm-student-profile-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
 .sm-student-profile-card.is-blocked-card {
   border-color: #fecaca;
   background: #fffafa;
 }
 
-.profile-card-left {
+.profile-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.profile-card-identity {
   display: flex;
   align-items: center;
   gap: 0.95rem;
 }
 
 .profile-large-avatar {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   border-radius: 10px;
   background: #eff6ff;
   color: #2563eb;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .profile-large-avatar.blocked {
@@ -774,40 +795,125 @@
   margin: 0.15rem 0 0;
 }
 
-.profile-card-right {
+.profile-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.45rem;
   flex-wrap: wrap;
 }
 
+.btn-profile-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.85rem;
+  height: 34px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: var(--text-primary, #0f172a);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-profile-key:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.btn-profile-block {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.85rem;
+  height: 34px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-profile-block.block {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.btn-profile-block.block:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.btn-profile-block.unblock {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+}
+
+.btn-profile-block.unblock:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+.btn-profile-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.85rem;
+  height: 34px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-profile-delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
 .profile-stats-cluster {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f1f5f9;
 }
 
 .cluster-item {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
   text-align: center;
-  min-width: 65px;
 }
 
 .cluster-val {
   display: block;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.1;
   color: var(--text-primary, #0f172a);
 }
 
 .cluster-lbl {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted, #64748b);
+  letter-spacing: 0.03em;
+  margin-top: 0.2rem;
 }
 
 .cluster-val.pass {
@@ -820,30 +926,6 @@
 
 .cluster-item.highlight .cluster-val {
   color: #2563eb;
-}
-
-.btn-profile-block {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.95rem;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-profile-block.block {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-}
-
-.btn-profile-block.unblock {
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #059669;
 }
 
 /* Detail Controls */
