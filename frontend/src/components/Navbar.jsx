@@ -46,7 +46,8 @@ function Navbar() {
                 {/* Center Navigation Links */}
                 <div className="navbar-nav">
                     {links.map((link) => {
-                        const isActive = location.pathname === link.to;
+                        const isActive = location.pathname === link.to ||
+                            (link.to !== '/admin/dashboard' && link.to !== '/student/dashboard' && location.pathname.startsWith(link.to));
                         return (
                             <Link
                                 key={link.to}

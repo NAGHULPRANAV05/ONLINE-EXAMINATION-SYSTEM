@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { materialAPI } from '../services/api';
 import { FaBookReader, FaDownload, FaSearch, FaFilePdf, FaFileWord, FaFilePowerpoint, FaFileArchive, FaFileAlt, FaCalendarAlt, FaBuilding, FaBookOpen } from 'react-icons/fa';
@@ -94,9 +93,7 @@ function StudyMaterials() {
     if (loading) return <LoadingSpinner />;
 
     return (
-        <>
-            <Navbar />
-            <div className="container" style={{ padding: '2rem 0' }}>
+        <div className="container" style={{ padding: '2rem 0' }}>
                 <h1><FaBookReader style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} /> Study Materials</h1>
                 <p style={{ color: '#64748b', marginBottom: '2rem' }}>
                     Browse and download study materials shared by your faculty.
@@ -217,7 +214,6 @@ function StudyMaterials() {
                     </div>
                 )}
             </div>
-        </>
     );
 }
 

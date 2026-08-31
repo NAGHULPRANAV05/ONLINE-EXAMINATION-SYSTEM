@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { resultAPI } from '../services/api';
 import {
@@ -84,8 +83,6 @@ function ResultView() {
 
     return (
         <div className="rv-page">
-            <Navbar />
-
             {/* Quick Action Navigation Bar */}
             <div className="rv-nav-actions">
                 <button className="rv-action-btn back" onClick={() => navigate('/student/dashboard')}>

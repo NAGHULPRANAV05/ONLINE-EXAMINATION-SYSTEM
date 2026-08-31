@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { subjectAPI, examAPI, questionAPI } from '../services/api';
 import {
@@ -92,8 +91,6 @@ function ExamManagement() {
 
     return (
         <div className="em-page">
-            <Navbar />
-
             {/* Hero */}
             <div className="em-hero">
                 <div className="em-hero-content">

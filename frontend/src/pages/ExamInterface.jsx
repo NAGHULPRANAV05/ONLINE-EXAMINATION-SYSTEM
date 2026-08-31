@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import Timer from '../components/Timer';
 import CodeEditor from '../components/CodeEditor';
 import LoadingSpinner from '../components/LoadingSpinner';

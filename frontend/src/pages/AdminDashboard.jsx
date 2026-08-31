@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { subjectAPI, examAPI, resultAPI } from '../services/api';
 import {
@@ -67,8 +66,6 @@ function AdminDashboard() {
 
     return (
         <div className="ad-page">
-            <Navbar />
-
             {/* -------- Hero Section -------- */}
             <div className="ad-hero">
                 {/* Decorative circles */}

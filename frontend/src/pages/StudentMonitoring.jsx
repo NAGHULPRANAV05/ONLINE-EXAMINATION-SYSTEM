@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { resultAPI, userAPI } from '../services/api';
 import {
@@ -331,8 +330,6 @@ function StudentMonitoring() {
 
     return (
         <div className="sm-mon-page">
-            <Navbar />
-
             {/* Standard Hero Banner */}
             <div className="sm-mon-hero">
                 <div className="sm-mon-hero-content">

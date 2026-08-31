@@ -10,8 +10,8 @@ import QuestionBank from './pages/QuestionBank';
 import ExamManagement from './pages/ExamManagement';
 import StudentMonitoring from './pages/StudentMonitoring';
 import StudyMaterialManagement from './pages/StudyMaterialManagement';
-import StudyMaterials from './pages/StudyMaterials';
 import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 
 function App() {
     return (
@@ -19,15 +19,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Student Routes */}
-            <Route
-                path="/student/dashboard"
-                element={
-                    <ProtectedRoute role="student">
-                        <StudentDashboard />
-                    </ProtectedRoute>
-                }
-            />
+            {/* Exam Route (Full screen proctored test mode) */}
             <Route
                 path="/student/exam/:examId"
                 element={
@@ -36,72 +28,77 @@ function App() {
                     </ProtectedRoute>
                 }
             />
-            <Route
-                path="/student/result/:resultId"
-                element={
-                    <ProtectedRoute>
-                        <ResultView />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/student/materials"
-                element={
-                    <ProtectedRoute role="student">
-                        <StudyMaterials />
-                    </ProtectedRoute>
-                }
-            />
 
-            {/* Admin Routes */}
-            <Route
-                path="/admin/dashboard"
-                element={
-                    <ProtectedRoute role="admin">
-                        <AdminDashboard />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/admin/subjects"
-                element={
-                    <ProtectedRoute role="admin">
-                        <SubjectManagement />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/admin/questions"
-                element={
-                    <ProtectedRoute role="admin">
-                        <QuestionBank />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/admin/exams"
-                element={
-                    <ProtectedRoute role="admin">
-                        <ExamManagement />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/admin/students"
-                element={
-                    <ProtectedRoute role="admin">
-                        <StudentMonitoring />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/admin/materials"
-                element={
-                    <ProtectedRoute role="admin">
-                        <StudyMaterialManagement />
-                    </ProtectedRoute>
-                }
-            />
+            {/* Application Portal Routes with Persistent Header Layout */}
+            <Route element={<Layout />}>
+                {/* Student Routes */}
+                <Route
+                    path="/student/dashboard"
+                    element={
+                        <ProtectedRoute role="student">
+                            <StudentDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/student/result/:resultId"
+                    element={
+                        <ProtectedRoute>
+                            <ResultView />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Admin Routes */}
+                <Route
+                    path="/admin/dashboard"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <AdminDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/subjects"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <SubjectManagement />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/questions"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <QuestionBank />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/exams"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <ExamManagement />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/students"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <StudentMonitoring />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/materials"
+                    element={
+                        <ProtectedRoute role="admin">
+                            <StudyMaterialManagement />
+                        </ProtectedRoute>
+                    }
+                />
+            </Route>
 
             <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>

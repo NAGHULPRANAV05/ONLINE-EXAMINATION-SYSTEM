@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { subjectAPI, materialAPI } from '../services/api';
 import {
@@ -269,8 +268,6 @@ function SubjectManagement() {
     if (selectedSubject) {
         return (
             <div className="sm-page">
-                <Navbar />
-
                 {/* Hero */}
                 <div className="sm-materials-hero">
                     <div className="sm-hero-content">
@@ -550,8 +547,6 @@ function SubjectManagement() {
     // =========================================
     return (
         <div className="sm-page">
-            <Navbar />
-
             {/* Hero Header */}
             <div className="sm-hero">
                 <div className="sm-hero-content">

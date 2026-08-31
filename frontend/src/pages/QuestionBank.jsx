@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AIQuestionGenerator from '../components/AIQuestionGenerator';
 import { subjectAPI, questionAPI } from '../services/api';
@@ -187,8 +186,6 @@ function QuestionBank() {
 
     return (
         <div className="qb-page">
-            <Navbar />
-
             {/* Standard Hero Banner */}
             <div className="qb-hero">
                 <div className="qb-hero-content">

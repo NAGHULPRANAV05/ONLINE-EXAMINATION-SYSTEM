@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { materialAPI } from '../services/api';
 import { FaFileAlt, FaUpload, FaEdit, FaTrash, FaFilePdf, FaFileWord, FaFilePowerpoint, FaFileArchive, FaTimes, FaPlus } from 'react-icons/fa';
@@ -126,7 +125,6 @@ function StudyMaterialManagement() {
 
     return (
         <>
-            <Navbar />
             <div className="container" style={{ padding: '2rem 0' }}>
                 <div className="flex items-center justify-between" style={{ marginBottom: '2rem' }}>
                     <div>
