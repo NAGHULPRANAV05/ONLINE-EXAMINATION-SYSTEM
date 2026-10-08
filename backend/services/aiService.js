@@ -73,7 +73,7 @@ exports.generateMCQQuestions = async (topic, subjectName, difficulty, count = 5)
             return generateDemoMCQQuestions(topic, subjectName, difficulty, count);
         }
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
 
         const prompt = `Generate ${count} multiple choice questions about "${topic}" for the subject "${subjectName}".
 Difficulty level: ${difficulty}
@@ -160,7 +160,7 @@ exports.generateCodingQuestion = async (topic, difficulty, language = 'any') => 
             return generateDemoCodingQuestion(topic, difficulty, language);
         }
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
 
         const languageNote = language !== 'any' ? `The solution should be implementable in ${language}.` : '';
 
