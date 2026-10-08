@@ -64,18 +64,39 @@
 }
 
 @keyframes o1 {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(40px, 50px); }
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(40px, 50px);
+  }
 }
 
 @keyframes o2 {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-50px, -40px); }
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(-50px, -40px);
+  }
 }
 
 @keyframes o3 {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.3); }
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+  }
 }
 
 .lp-grid {
@@ -89,8 +110,13 @@
 }
 
 @keyframes gridDrift {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(40px, 40px); }
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(40px, 40px);
+  }
 }
 
 /* ---- Card ---- */
@@ -114,6 +140,7 @@
     opacity: 0;
     transform: translateY(22px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -129,8 +156,15 @@
 }
 
 @keyframes accentShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .lp-body {
@@ -160,8 +194,15 @@
 }
 
 @keyframes logoPulse {
-  0%, 100% { box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
-  50% { box-shadow: 0 4px 22px rgba(37, 99, 235, 0.5); }
+
+  0%,
+  100% {
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 4px 22px rgba(37, 99, 235, 0.5);
+  }
 }
 
 .lp-title {
@@ -198,11 +239,27 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-6px); }
-  40% { transform: translateX(6px); }
-  60% { transform: translateX(-3px); }
-  80% { transform: translateX(3px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-6px);
+  }
+
+  40% {
+    transform: translateX(6px);
+  }
+
+  60% {
+    transform: translateX(-3px);
+  }
+
+  80% {
+    transform: translateX(3px);
+  }
 }
 
 /* ---- Form ---- */
@@ -353,7 +410,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ---- Divider ---- */
@@ -386,7 +445,7 @@
   margin: 0 auto 0.15rem;
 }
 
-.lp-google-wrap > div {
+.lp-google-wrap>div {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -455,11 +514,13 @@
   .lp-root {
     padding: 0;
   }
+
   .lp-card {
     border-radius: 0;
     max-width: 100%;
     min-height: 100vh;
   }
+
   .lp-body {
     padding: 1.5rem 1.25rem 1.25rem;
   }

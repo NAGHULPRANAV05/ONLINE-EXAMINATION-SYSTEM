@@ -404,16 +404,30 @@
 }
 
 @keyframes seCardIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Responsive ── */
 @media (max-width: 1024px) {
-  .se-grid { grid-template-columns: repeat(2, 1fr); }
+  .se-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
-  .se-grid { grid-template-columns: 1fr; }
-  .se-search-wrap input { width: 140px; }
+  .se-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .se-search-wrap input {
+    width: 140px;
+  }
 }

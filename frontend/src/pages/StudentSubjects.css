@@ -356,17 +356,34 @@
 }
 
 @keyframes ssCardIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Responsive ── */
 @media (max-width: 1024px) {
-  .ss-subjects-grid { grid-template-columns: repeat(2, 1fr); }
+  .ss-subjects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
-  .ss-subjects-grid { grid-template-columns: 1fr; }
-  .ss-hero-text h1 { font-size: 1.6rem; }
-  .ss-search-wrap input { width: 140px; }
+  .ss-subjects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ss-hero-text h1 {
+    font-size: 1.6rem;
+  }
+
+  .ss-search-wrap input {
+    width: 140px;
+  }
 }

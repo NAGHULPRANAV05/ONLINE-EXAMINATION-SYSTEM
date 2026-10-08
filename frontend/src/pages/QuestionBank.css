@@ -448,8 +448,14 @@
   color: var(--text-muted, #64748b);
 }
 
-.qb-breadcrumb .sep { color: #cbd5e1; }
-.qb-breadcrumb .current { font-weight: 700; color: var(--text-primary, #0f172a); }
+.qb-breadcrumb .sep {
+  color: #cbd5e1;
+}
+
+.qb-breadcrumb .current {
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
 
 /* Subject Header Banner Card */
 .qb-subject-header-card {
@@ -481,8 +487,15 @@
   font-size: 1.25rem;
 }
 
-.qb-header-avatar.code { background: #ecfdf5; color: #059669; }
-.qb-header-avatar.apt { background: #eff6ff; color: #2563eb; }
+.qb-header-avatar.code {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.qb-header-avatar.apt {
+  background: #eff6ff;
+  color: #2563eb;
+}
 
 .qb-title-row {
   display: flex;
@@ -539,8 +552,13 @@
   font-weight: 600;
 }
 
-.metric-box.mcq .metric-val { color: #2563eb; }
-.metric-box.code .metric-val { color: #059669; }
+.metric-box.mcq .metric-val {
+  color: #2563eb;
+}
+
+.metric-box.code .metric-val {
+  color: #059669;
+}
 
 .qb-header-btns {
   display: flex;
@@ -562,7 +580,9 @@
   transition: all 0.15s ease;
 }
 
-.btn-header-add:hover { background: #1d4ed8; }
+.btn-header-add:hover {
+  background: #1d4ed8;
+}
 
 .btn-header-ai {
   display: inline-flex;
@@ -579,7 +599,9 @@
   transition: all 0.15s ease;
 }
 
-.btn-header-ai:hover { background: #6d28d9; }
+.btn-header-ai:hover {
+  background: #6d28d9;
+}
 
 /* Filter and Search Controls */
 .qb-controls-row {
@@ -733,12 +755,36 @@
   gap: 0.2rem;
 }
 
-.qb-badge.mcq { background: #eef2ff; color: #4338ca; }
-.qb-badge.coding { background: #ecfdf5; color: #059669; }
-.qb-badge.easy { background: #f0fdf4; color: #15803d; }
-.qb-badge.medium { background: #fffbeb; color: #b45309; }
-.qb-badge.hard { background: #fef2f2; color: #dc2626; }
-.qb-badge.marks { background: #eff6ff; color: #2563eb; font-weight: 600; }
+.qb-badge.mcq {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.qb-badge.coding {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.qb-badge.easy {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.qb-badge.medium {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.qb-badge.hard {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.qb-badge.marks {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
 
 .qb-q-text {
   font-size: 0.9rem;
